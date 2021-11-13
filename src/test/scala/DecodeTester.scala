@@ -1,0 +1,23 @@
+import chisel3.iotesters._
+import org.scalatest._
+import consts._
+
+
+
+class DecodeTester(dut: Decoder) extends PeekPokeTester(dut) {
+  poke(dut.io.instruction, 0x00200093) // addi x1 x0 2 // I
+  step(1)
+  expect(dut.io.opcode, OP.OP_I)
+  step(1)
+  println ("Opcode is " + peek(dut.io.opcode).toString)
+  poke(dut.io.instruction, 0x002081b3)
+  step(1)
+  expect(dut.io.opcode, OP.OP_R)
+  println ("Opcode is " + peek(dut.io.opcode).toString)
+}
+
+class DecoderSpec extends FlatSpec with Matchers {
+  "Decode Tester" should "pass" in {
+    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeTester(c)} should be (true)
+  }
+}

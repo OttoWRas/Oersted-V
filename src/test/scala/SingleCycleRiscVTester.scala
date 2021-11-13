@@ -1,7 +1,7 @@
 import chisel3.iotesters._
 import org.scalatest._
 
-import Constants._
+import consts._
 
 class RiscVSpec extends FlatSpec with Matchers {
   "RiscV" should "pass" in {

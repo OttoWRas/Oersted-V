@@ -1,6 +1,6 @@
 import chisel3._
 import chisel3.util._
-import Constants._
+import consts._
 /**
   * Author Martin Schoeberl (martin@jopdesign.com)
   *
@@ -12,7 +12,6 @@ class SingleCycleRiscV extends Module {
     val done = Output(Bool())
   })
 
-
   // TODO: the program should be read in from a file
   val program = Array[Int](
     0x00200093, // addi x1 x0 2
@@ -22,7 +21,6 @@ class SingleCycleRiscV extends Module {
   // A little bit of functional magic to convert the Scala Int Array to a Chisel Vec of UInt
   val imem = VecInit(program.map(_.U(32.W)))
 
-
   val pc = RegInit(0.U(32.W))
 
   // TODO: there should be an elegant way to express this
@@ -30,6 +28,7 @@ class SingleCycleRiscV extends Module {
   for (i <- 0 until 4) vec(i) := 0.U
   // We initialize the register file to 0 for a nicer display
   // In a real processor this is usually not done
+  
   val reg = RegInit(vec)
 
   val instr = imem(pc(31, 2))
@@ -54,3 +53,7 @@ class SingleCycleRiscV extends Module {
   for (i <- 0 until 4) io.regDeb(i) := reg(i)
 }
 
+
+object CPU extends App {
+  (new chisel3.stage.ChiselStage).emitVerilog(new SingleCycleRiscV)
+}

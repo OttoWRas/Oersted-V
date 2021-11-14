@@ -9,7 +9,7 @@ class ALUtest extends FlatSpec with ChiselScalatestTester with Matchers {
   "ALU ADD & SUB test" should "pass" in {
     test(new ALU) { c=>
 
-      for (w <- 0 to 25) {
+      for (w <- 0 to 1000) {
         val r = new scala.util.Random
         val a = r.nextInt(100000)
         val b = r.nextInt(100000)
@@ -33,7 +33,7 @@ class ALUtest extends FlatSpec with ChiselScalatestTester with Matchers {
   "ALU COPY test" should "pass" in {
     test(new ALU) { c=>
 
-      for (w <- 0 to 25) {
+      for (w <- 0 to 1000) {
         val r = new scala.util.Random
         val a = r.nextInt(100000)
         val b = r.nextInt(100000)
@@ -53,7 +53,7 @@ class ALUtest extends FlatSpec with ChiselScalatestTester with Matchers {
   "ALU SHIFT test" should "pass" in {
     test(new ALU) { c=>
 
-      for (w <- 0 to 25) {
+      for (w <- 0 to 1000) {
         val r = new scala.util.Random
         val a = r.nextInt(100000)
         val b = r.nextInt(16)
@@ -77,7 +77,7 @@ class ALUtest extends FlatSpec with ChiselScalatestTester with Matchers {
 
   "ALU LOGIC test" should "pass" in {
     test(new ALU) { c=>
-      for (w <- 0 to 25) {
+      for (w <- 0 to 1000) {
         val r = new scala.util.Random
         val a = r.nextInt(1000000)
         val b = r.nextInt(1000000)

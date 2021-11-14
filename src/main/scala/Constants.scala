@@ -36,6 +36,8 @@ object OP {
     val OP_JALR: UInt = 103.U(7.W)
     val OP_LUI: UInt = 55.U(7.W)
     val OP_AUIPC: UInt = "b0010111".U(7.W) 
+
+    
 }
 /*
 object Decoder {

@@ -8,9 +8,12 @@ import consts._
   */
 class SingleCycleRiscV extends Module {
   val io = IO(new Bundle {
-    val regDeb = Output(Vec(4, UInt(32.W))) // debug output for the tester
+    val regDeb = Output(Vec(32, UInt(32.W))) // debug output for the tester
     val done = Output(Bool())
   })
+
+  /* set up modules needed */
+  val decoder = Module(new Decoder)
 
   // TODO: the program should be read in from a file
   val program = Array[Int](
@@ -20,25 +23,24 @@ class SingleCycleRiscV extends Module {
 
   // A little bit of functional magic to convert the Scala Int Array to a Chisel Vec of UInt
   val imem = VecInit(program.map(_.U(32.W)))
-
   val pc = RegInit(0.U(32.W))
 
-  // TODO: there should be an elegant way to express this
-  val vec = Wire(Vec(4, UInt(32.W)))
-  for (i <- 0 until 4) vec(i) := 0.U
-  // We initialize the register file to 0 for a nicer display
-  // In a real processor this is usually not done
+  /* set up 32 registers and init them all to 0 */
+  val vec = Wire(Vec(32, UInt(32.W))) 
+  for (i <- 0 until 32) vec(i) := 0.U
   
   val reg = RegInit(vec)
+  val instr = imem(pc(31, 2)) // from 2nd bit since we know bit 0 and 1 are always 0.
 
-  val instr = imem(pc(31, 2))
+  decoder.io.instruction := instr
 
-  val opcode = instr(6, 0)
-  val rd = instr(11, 7)
-  val rs1 = instr(19, 15)
-  val imm = instr(31, 20) // TODO sign extend
+  val opcode  = decoder.io.opcode  
+  val rd      = decoder.io.rd       
+  val rs1     = decoder.io.rs1
+  val imm     = decoder.io.imm 
 
-  switch(opcode) {
+  /* this should be handled by the execute stage (ALU) */
+  switch(decoder.io.opcode) {
     is(0x13.U) {
       reg(rd) := reg(rs1) + imm
     }
@@ -49,8 +51,8 @@ class SingleCycleRiscV extends Module {
   // done should be set when the program ends, and the tester shall stop
   io.done := true.B
 
-  // Make the register file visible to the tester
-  for (i <- 0 until 4) io.regDeb(i) := reg(i)
+  /* fill our debugging registers with the content of our actual registers */
+  for (i <- 0 until 32) io.regDeb(i) := reg(i)
 }
 
 

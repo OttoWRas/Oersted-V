@@ -9,7 +9,7 @@ class RiscVSpec extends FlatSpec with Matchers {
       new PeekPokeTester(c) {
 
         def printReg() = {
-          for (i <- 0 until 4) {
+          for (i <- 0 until 32) {
             print(peek(dut.io.regDeb(i)).toString + " ")
           }
           println()

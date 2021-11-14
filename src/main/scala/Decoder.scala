@@ -52,20 +52,16 @@ class SBType extends Bundle {
 }
 
 class UJType extends Bundle {
-    val imm31to12 = Output(UInt(19.W))
-    val rd = Output(UInt(5.W))
-    val opcode = Output(UInt(7.W))
-}
-/*
-class JType extends Bundle {
+    val imm31to12 = Output(UInt(20.W))
     val imm20 = Output(UInt(1.W))
     val imm10to1 = Output(UInt(10.W))
-    val imm1 = Output(UInt(1.W))
+    val imm11 = Output(UInt(1.W))
     val imm19to12 = Output(UInt(8.W))
+
     val rd = Output(UInt(5.W))
     val opcode = Output(UInt(7.W))
 }
-*/
+
 class Decoder extends MultiIOModule {
     val in = IO(Input(UInt(32.W)))
     val decoded = IO(Output(new DecodeOut))

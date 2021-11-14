@@ -1,6 +1,7 @@
+package core
+
 import chisel3._
 import chisel3.util._
-import Constants._
 /**
   * Author Martin Schoeberl (martin@jopdesign.com)
   *

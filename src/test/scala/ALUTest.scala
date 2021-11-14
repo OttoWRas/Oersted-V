@@ -58,8 +58,6 @@ class ALUtest extends FlatSpec with ChiselScalatestTester with Matchers {
         val a = r.nextInt(100000)
         val b = r.nextInt(16)
 
-        info("Tested numbers = " + a.toString + "," + b.toString)
-
         c.io.opcode.poke(ALU_SLL)
         c.io.data1.poke(a.U)
         c.io.data2.poke(b.U)

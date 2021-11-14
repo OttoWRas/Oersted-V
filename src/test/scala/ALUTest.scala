@@ -64,13 +64,13 @@ class ALUtest extends FlatSpec with ChiselScalatestTester with Matchers {
         c.io.data1.poke(a.U)
         c.io.data2.poke(b.U)
         c.clock.step(10)
-        c.io.out.expect((a << b).U)
+        c.io.out.expect(("b" + (a << b).toBinaryString).U)
         c.io.opcode.poke(ALU_SRL)
         c.clock.step(15)
-        c.io.out.expect((a >> b).U)
+        c.io.out.expect(("b" + (a >> b).toBinaryString).U)
         c.io.opcode.poke(ALU_SRA)
         c.clock.step(10)
-        c.io.out.expect((a >>> b).U)
+        c.io.out.expect(("b" + (a >>> b).toBinaryString).U)
       }
     }
   }

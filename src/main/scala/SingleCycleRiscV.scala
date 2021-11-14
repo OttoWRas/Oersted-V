@@ -9,6 +9,7 @@ import consts._
 class SingleCycleRiscV extends Module {
   val io = IO(new Bundle {
     val regDeb = Output(Vec(32, UInt(32.W))) // debug output for the tester
+    val pc = Output(UInt(32.W))
     val done = Output(Bool())
   })
 
@@ -17,7 +18,7 @@ class SingleCycleRiscV extends Module {
 
   // TODO: the program should be read in from a file
   val program = Array[Int](
-    0x00200093, // addi x1 x0 2
+    0x00b00093, // addi x1 x0 2
     0x00300113, // addi x2 x0 3
     0x002081b3) // add x3 x1 x2
 
@@ -45,9 +46,9 @@ class SingleCycleRiscV extends Module {
       reg(rd) := reg(rs1) + imm
     }
   }
-
+  
   pc := pc + 4.U
-
+io.pc := pc
   // done should be set when the program ends, and the tester shall stop
   io.done := true.B
 

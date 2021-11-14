@@ -7,7 +7,6 @@ class RiscVSpec extends FlatSpec with Matchers {
   "RiscV" should "pass" in {
     chisel3.iotesters.Driver.execute(Array("--generate-vcd-output", "on"), () => new SingleCycleRiscV()) { c =>
       new PeekPokeTester(c) {
-
         def dump() = {
           var str: String = "";
           for (i <- 0 until 32) {

@@ -18,7 +18,7 @@ class SingleCycleRiscV extends Module {
 
   // TODO: the program should be read in from a file
   val program = Array[Int](
-    0x00b00093, // addi x1 x0 2
+    0x00200093, // addi x1 x0 2
     0x00300113, // addi x2 x0 3
     0x002081b3) // add x3 x1 x2
 
@@ -33,15 +33,16 @@ class SingleCycleRiscV extends Module {
   val reg = RegInit(vec)
   val instr = imem(pc(31, 2)) // from 2nd bit since we know bit 0 and 1 are always 0.
 
-  decoder.io.instruction := instr
+  decoder.in := instr
 
-  val opcode  = decoder.io.opcode  
-  val rd      = decoder.io.rd       
-  val rs1     = decoder.io.rs1
-  val imm     = decoder.io.imm 
+ 
+  val opcode  = decoder.decoded.opcode  
+  val rd      = decoder.decoded.rd       
+  val rs1     = decoder.decoded.rs1
+  val imm     = decoder.decoded.imm
 
   /* this should be handled by the execute stage (ALU) */
-  switch(decoder.io.opcode) {
+  switch(decoder.decoded.opcode) {
     is(0x13.U) {
       reg(rd) := reg(rs1) + imm
     }

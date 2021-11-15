@@ -17,6 +17,7 @@ class SingleCycleRiscV extends Module {
   /* set up modules needed */
   val decoder = Module(new Decoder)
 
+
   // TODO: the program should be read in from a file
   val program = Array[Int](
     0x00200093, // addi x1 x0 2

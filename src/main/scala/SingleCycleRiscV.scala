@@ -1,6 +1,13 @@
+<<<<<<< HEAD
 import chisel3._
 import chisel3.util._
 
+=======
+package core
+
+import chisel3._
+import chisel3.util._
+>>>>>>> a13373d28b51e639423e85f5abfe9527ccabbfb0
 /**
   * Author Martin Schoeberl (martin@jopdesign.com)
   *
@@ -40,7 +47,11 @@ class SingleCycleRiscV extends Module {
   val imm = instr(31, 20) // TODO sign extend
 
   switch(opcode) {
+<<<<<<< HEAD
     is(0x13.U) { 
+=======
+    is(0x13.U) {
+>>>>>>> a13373d28b51e639423e85f5abfe9527ccabbfb0
       reg(rd) := reg(rs1) + imm
     }
   }
@@ -54,4 +65,7 @@ class SingleCycleRiscV extends Module {
   for (i <- 0 until 4) io.regDeb(i) := reg(i)
 }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> a13373d28b51e639423e85f5abfe9527ccabbfb0

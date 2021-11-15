@@ -4,7 +4,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.util.experimental._
 
-class Memory(readBeef: Boolean) extends Module {
+class Memory(fileToLoad: String = "") extends Module {
     val io = IO(new Bundle {
             val rdAddr = Input(UInt(16.W))
             val rdData = Output(UInt(32.W))
@@ -20,8 +20,8 @@ class Memory(readBeef: Boolean) extends Module {
     when (io.wrEnable) {
         mem.write(io.wrAddr, io.wrData)
     }
-    if (readBeef) {
-        loadMemoryFromFile(mem, "mem1.hex.txt")
+    if (!(fileToLoad == "")) {
+        loadMemoryFromFile(mem, fileToLoad)
     }
     
 }

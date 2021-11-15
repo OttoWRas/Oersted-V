@@ -38,7 +38,6 @@ class RiscVSpec extends FlatSpec with Matchers {
           step(1)
         }
         
->>>>>>> 3014227424f71bc0e4ba82ddff34df272a1061a2
       }
     }
   }

@@ -1,13 +1,7 @@
-<<<<<<< HEAD
-import chisel3._
-import chisel3.util._
-
-=======
 package core
 
 import chisel3._
 import chisel3.util._
->>>>>>> a13373d28b51e639423e85f5abfe9527ccabbfb0
 /**
   * Author Martin Schoeberl (martin@jopdesign.com)
   *
@@ -48,17 +42,11 @@ class SingleCycleRiscV extends Module {
   val rs1     = decoder.decoded.rs1
   val imm     = decoder.decoded.imm
 
-<<<<<<< HEAD
+
   switch(opcode) {
-<<<<<<< HEAD
-    is(0x13.U) { 
-=======
-=======
-  /* this should be handled by the execute stage (ALU) */
-  switch(decoder.decoded.opcode) {
->>>>>>> 3014227424f71bc0e4ba82ddff34df272a1061a2
+
     is(0x13.U) {
->>>>>>> a13373d28b51e639423e85f5abfe9527ccabbfb0
+
       reg(rd) := reg(rs1) + imm
     }
   }
@@ -72,14 +60,8 @@ io.pc := pc
   for (i <- 0 until 32) io.regDeb(i) := reg(i)
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-=======
->>>>>>> a13373d28b51e639423e85f5abfe9527ccabbfb0
-=======
 
 object CPU extends App {
   (new chisel3.stage.ChiselStage).emitVerilog(new SingleCycleRiscV)
 }
->>>>>>> 3014227424f71bc0e4ba82ddff34df272a1061a2
+

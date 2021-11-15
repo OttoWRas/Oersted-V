@@ -4,9 +4,10 @@ import org.scalatest._
 import chiseltest._
 import chisel3._
 
+
 class Memorytest extends FlatSpec with ChiselScalatestTester with Matchers {
   "Memory Write & Read test 1" should "pass" in {
-    test(new Memory) { m=>
+    test(new Memory()) { m=>
     
     for (w <- 0 to 100) {
         val r = new scala.util.Random
@@ -26,7 +27,7 @@ class Memorytest extends FlatSpec with ChiselScalatestTester with Matchers {
     }
 
 "Memory Write & Read test 2" should "pass" in {
-    test(new Memory) { m=>
+    test(new Memory()) { m=>
     
     for (w <- 0 to 100) {
         val r = new scala.util.Random
@@ -56,6 +57,22 @@ class Memorytest extends FlatSpec with ChiselScalatestTester with Matchers {
             m.io.rdData.expect(d.U)
         }
       }
+    }
+  }
+
+  "Memory deadBeef test" should "pass" in {
+    test(new Memory("mem1.hex.txt")) { m=>
+
+    val a = "deadbeef"
+    print("Beeftest: ")
+
+    for (w <- 0 to 7) {
+        m.io.rdAddr.poke(w.U)
+        m.clock.step(10)
+        m.io.rdData.expect(Integer.parseInt(a.slice(w,w+1), 16).U)
+        print(m.io.rdData.peek().litValue.intValue().toHexString)
+      }
+    println(" ")
     }
   }
 }

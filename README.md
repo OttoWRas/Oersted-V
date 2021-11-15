@@ -1,4 +1,4 @@
-OERSTED-V CPU PROJEKT
+OERSTED-V CPU PROJECT
 =====================
 
 ## Initial todo

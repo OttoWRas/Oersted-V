@@ -1,6 +1,20 @@
+package core
+
 import chisel3._
 import chisel3.util._
-import consts._
+
+object OP {
+    val OP_R: UInt = 51.U(7.W)
+    val OP_I: UInt = 19.U(7.W) // 'regular' I instructions
+    val OP_IL: UInt = 3.U(7.W) // type I load instructions
+    val OP_IE: UInt = 115.U(7.W) // type I environment call instructions 
+    val OP_S: UInt = 32.U(7.W)
+    val OP_B: UInt = 99.U(7.W)
+    val OP_JAL: UInt = 111.U(7.W)
+    val OP_JALR: UInt = 103.U(7.W)
+    val OP_LUI: UInt = 55.U(7.W)
+    val OP_AUIPC: UInt = "b0010111".U(7.W) 
+}
 
 class DecodeOut extends Bundle {
     val opcode      = Output(UInt(7.W))

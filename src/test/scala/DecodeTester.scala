@@ -1,6 +1,7 @@
+package core
+
 import chisel3.iotesters._
 import org.scalatest._
-import consts._
 
 
 

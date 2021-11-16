@@ -14,7 +14,9 @@ class DecodeIType (dut: Decoder) extends PeekPokeTester(dut) {
         val rs1 = BigInt(r.nextInt(32) << 15)
         val funct3 = 0
         val funct7 = 0 
-        val imm = BigInt(r.nextInt(4096)) << 20
+        //val imm = BigInt(r.nextInt(4096)) << 20
+
+        val imm = BigInt(r.nextInt(4096) - 2048) << 20 // doesn't imepl
 
         val bitString = rd | opcode | rs1 | imm 
 

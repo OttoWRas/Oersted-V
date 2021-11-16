@@ -49,7 +49,7 @@ class SingleCycleRiscV extends Module {
   val rs1     = decoder.decoded.rs1
   val imm     = decoder.decoded.imm
 
-
+/*
   switch(decoder.decoded.opcode) {
 
     is(OP.OP_I) {
@@ -58,7 +58,7 @@ class SingleCycleRiscV extends Module {
     } 
     
   }
-  
+  */
   pc := pc + 4.U
   
   io.pc := pc

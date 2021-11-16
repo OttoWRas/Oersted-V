@@ -23,7 +23,7 @@ class DecodeOut extends Bundle {
     val rs1         = Output(UInt(5.W))
     val rs2         = Output(UInt(5.W))
     val funct7      = Output(UInt(7.W))
-    val imm         = Output(UInt(64.W))
+    val imm         = Output(SInt(32.W))
 }
 
 class RType extends Bundle {
@@ -36,7 +36,7 @@ class RType extends Bundle {
 }
 
 class IType extends Bundle {
-    val imm     = Output(UInt(12.W))
+    val imm     = Output(SInt(12.W))
     val rs1     = Output(UInt(5.W))
     val funct3  = Output(UInt(3.W))
     val rd      = Output(UInt(5.W))
@@ -44,22 +44,22 @@ class IType extends Bundle {
 }
 
 class SBType extends Bundle {
-    val imm12 = UInt(1.W)
-    val imm10to5 = UInt(6.W)
+    val imm12 = SInt(1.W)
+    val imm10to5 = SInt(6.W)
     val rs2 = UInt(5.W)
     val rs1 = UInt(5.W)
     val funct3 = UInt(3.W)
-    val imm4to1 = UInt(5.W)
-    val imm11 = UInt(1.W)
+    val imm4to1 = SInt(5.W)
+    val imm11 = SInt(1.W)
     val opcode = UInt(7.W)
 }
 
 class UJType extends Bundle {
-    val imm31to12 = Output(UInt(20.W))
-    val imm20 = Output(UInt(1.W))
-    val imm10to1 = Output(UInt(10.W))
-    val imm11 = Output(UInt(1.W))
-    val imm19to12 = Output(UInt(8.W))
+    val imm31to12 = Output(SInt(20.W))
+    val imm20 = Output(SInt(1.W))
+    val imm10to1 = Output(SInt(10.W))
+    val imm11 = Output(SInt(1.W))
+    val imm19to12 = Output(SInt(8.W))
 
     val rd = Output(UInt(5.W))
     val opcode = Output(UInt(7.W))
@@ -78,7 +78,7 @@ class Decoder extends MultiIOModule {
     decoded.rs1      := WireDefault(0.U)
     decoded.rs2      := WireDefault(0.U)
     decoded.funct7   := WireDefault(0.U)
-    decoded.imm      := WireDefault(0.U)
+    decoded.imm      := WireDefault(0.S)
 
     switch(opcode) {
         is(OP.OP_R){
@@ -97,11 +97,20 @@ class Decoder extends MultiIOModule {
             decoded.rd      := I.rd
             decoded.funct3  := I.funct3
             decoded.rs1     := I.rs1
-            decoded.imm     := 0.U(52.W) ## I.imm
+           
+            /* sign extension for immediate ? */
+            //decoded.imm := I.imm 
+            
+            when(I.imm(11) & true.B) { //( check if sign bit is 1)
+                decoded.imm := I.imm | "hFFFFF000".U.asSInt // extend with 1's
+            }.otherwise {
+                decoded.imm := I.imm | "h00000000".U.asSInt // otherwise, extend with alot of 0's.. 
+            }
+
             decoded.funct7  := 0.U
             decoded.rs2     := 0.U
         }
-        
+        /*
         is(OP.OP_B, OP.OP_S){
            val SB = in.asTypeOf(new SBType)
             
@@ -110,7 +119,7 @@ class Decoder extends MultiIOModule {
             decoded.rs2     := SB.rs2
             decoded.imm     := SB.imm12 ## SB.imm11 ## SB.imm10to5 ## SB.imm4to1 ## 0.U(1.W) // combining immediates for both S and B type
 
-        }
+        }*/
 
         is(OP.OP_LUI, OP.OP_AUIPC, OP.OP_JAL){
             val UJ = in.asTypeOf(new UJType)
@@ -118,10 +127,42 @@ class Decoder extends MultiIOModule {
             decoded.rd := UJ.rd
             decoded.imm := UJ.imm31to12 
         }
-       
+     
     }
 }
   /*
+
+
+31:20 for load (type I)
+31:25 and 11:17 for store (type S) (6 + 6)
+31, 7, 30:25 and 11:8 for conditional (type B) (1 + 1 + 6 + 4 = 12 bits)
+
+opcodes can be used to figure out what to sign extend
+
+opcode bit 6: 0 for data transfer (load/store)
+opcode bit 6: 1 for conditional branches
+opcode bit 5: 0 for load
+opcode bit 5: 1 for store
+
+
+
+
+
+Elaboration: The immediate generation logic must choose between 
+sign-extending
+a 12-bit field in instruction bits 31:20 for load instructions, 
+bits 31:25 and 11:7 for store instructions, 
+
+or bits 31, 7, 30:25, and 11:8 for the conditional branch. Since
+the input is all 32 bits of the instruction, it can use the opcode bits of the instruction
+to select the proper field. RISC-V opcode bit 6 happens to be 0 for data transfer
+instructions and 1 for conditional branches, and RISC-V opcode bit 5 happens to be 0
+for load instructions and 1 for store instructions. Thus, bits 5 and 6 can control a 3:1
+multiplexor inside the immediate generation logic that selects the appropriate 12-bit
+field for load, store, and conditional branch instructions.
+
+
+
 
 val asSB = in.asTypeOf(new SBType)
 val SBImm = asSB.imm12 ## asSB.imm11 ## asSB.imm10to5 ## asSB.imm4to1 ## 0.U(1.W) // ## = concat

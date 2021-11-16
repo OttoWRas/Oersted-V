@@ -7,6 +7,9 @@ import chisel3.util._
   *
   * A single-cycle implementation of RISC-V is practically an ISA simulator.
   */
+
+
+
 class SingleCycleRiscV extends Module {
   val io = IO(new Bundle {
     val regDeb = Output(Vec(32, UInt(32.W))) // debug output for the tester
@@ -15,8 +18,11 @@ class SingleCycleRiscV extends Module {
   })
 
   /* set up modules needed */
-  val decoder = Module(new Decoder)
-
+  val decoder   = Module(new Decoder)
+   /*val ALU       = Module(new ALU)
+  val registers = Module(new Registers)
+  val memory    = Module(new Memory)
+ val control = Module(new Control) */
 
   // TODO: the program should be read in from a file
   val program = Array[Int](
@@ -31,29 +37,31 @@ class SingleCycleRiscV extends Module {
   /* set up 32 registers and init them all to 0 */
   val vec = Wire(Vec(32, UInt(32.W))) 
   for (i <- 0 until 32) vec(i) := 0.U
-  
   val reg = RegInit(vec)
   val instr = imem(pc(31, 2)) // from 2nd bit since we know bit 0 and 1 are always 0.
-
+  
+  /* connect modules to eachother */
   decoder.in := instr
 
  
-  val opcode  = decoder.decoded.opcode  
+  val opcode  = decoder.decoded.opcode
   val rd      = decoder.decoded.rd       
   val rs1     = decoder.decoded.rs1
   val imm     = decoder.decoded.imm
 
 
-  switch(opcode) {
+  switch(decoder.decoded.opcode) {
 
-    is(0x13.U) {
+    is(OP.OP_I) {
 
       reg(rd) := reg(rs1) + imm
-    }
+    } 
+    
   }
   
   pc := pc + 4.U
-io.pc := pc
+  
+  io.pc := pc
   // done should be set when the program ends, and the tester shall stop
   io.done := true.B
 

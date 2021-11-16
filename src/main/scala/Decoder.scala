@@ -23,20 +23,9 @@ class DecodeOut extends Bundle {
     val rs1         = Output(UInt(5.W))
     val rs2         = Output(UInt(5.W))
     val funct7      = Output(UInt(7.W))
-    val imm         = Output(UInt(32.W))
+    val imm         = Output(UInt(64.W))
 }
-/*
-class SBType extends Bundle {
-    val imm12 = UInt(1.W)
-    val imm10to5 = UInt(6.W)
-    val rs2 = UInt(5.W)
-    val rs1 = UInt(5.W)
-    val funct3 = UInt(3.W)
-    val imm4to1 = UInt(5.W)
-    val imm11 = UInt(1.W)
-    val opcode = UInt(7.W)
-}
-*/
+
 class RType extends Bundle {
     val funct7      = Output(UInt(7.W))
     val rs2         = Output(UInt(5.W))
@@ -76,20 +65,20 @@ class UJType extends Bundle {
     val opcode = Output(UInt(7.W))
 }
 
+
 class Decoder extends MultiIOModule {
     val in = IO(Input(UInt(32.W)))
     val decoded = IO(Output(new DecodeOut))
     val opcode = in(6,0)
-
     // this feels like it could be smarter? if no default values are given it won't compile
-    decoded.opcode := opcode // same for all instr
+    decoded.opcode   := opcode // same for all instr
 
-    decoded.rd       := 0.U
-    decoded.funct3   := 0.U
-    decoded.rs1      := 0.U
-    decoded.rs2      := 0.U
-    decoded.funct7   := 0.U
-    decoded.imm      := 0.U
+    decoded.rd       := WireDefault(0.U)
+    decoded.funct3   := WireDefault(0.U)
+    decoded.rs1      := WireDefault(0.U)
+    decoded.rs2      := WireDefault(0.U)
+    decoded.funct7   := WireDefault(0.U)
+    decoded.imm      := WireDefault(0.U)
 
     switch(opcode) {
         is(OP.OP_R){
@@ -108,7 +97,7 @@ class Decoder extends MultiIOModule {
             decoded.rd      := I.rd
             decoded.funct3  := I.funct3
             decoded.rs1     := I.rs1
-            decoded.imm     := 0.U(24.W) ## I.imm
+            decoded.imm     := 0.U(52.W) ## I.imm
             decoded.funct7  := 0.U
             decoded.rs2     := 0.U
         }
@@ -120,8 +109,7 @@ class Decoder extends MultiIOModule {
             decoded.rs1     := SB.rs1
             decoded.rs2     := SB.rs2
             decoded.imm     := SB.imm12 ## SB.imm11 ## SB.imm10to5 ## SB.imm4to1 ## 0.U(1.W) // combining immediates for both S and B type
-            
-            
+
         }
 
         is(OP.OP_LUI, OP.OP_AUIPC, OP.OP_JAL){

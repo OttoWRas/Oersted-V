@@ -160,6 +160,7 @@ class DecodeRALUSpec extends FlatSpec with Matchers {
 
 
 /* WIP */
+
 class DecodeIALUTest (dut: Decoder) extends PeekPokeTester(dut) {
     for(i <- 0 to 1000) {
         val r = new scala.util.Random
@@ -212,13 +213,13 @@ class DecodeIALUTest (dut: Decoder) extends PeekPokeTester(dut) {
     }
 
 }
-
+/*
 class DecodeIALUSpec extends FlatSpec with Matchers {
   "I type instructions and ALU ops" should "pass" in {
     chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeIALUTest(c)} should be (true)
   }
 }
-
+*/
 
 /* WIP
 class DecodeJType (dut: Decoder) extends PeekPokeTester(dut) {

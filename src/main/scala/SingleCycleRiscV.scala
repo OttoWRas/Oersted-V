@@ -41,7 +41,7 @@ class SingleCycleRiscV extends Module {
   val instr = imem(pc(31, 2)) // from 2nd bit since we know bit 0 and 1 are always 0.
   
   /* connect modules to eachother */
-  decoder.in := instr
+  decoder.io.in := instr
 
  
   val opcode  = decoder.decoded.opcode

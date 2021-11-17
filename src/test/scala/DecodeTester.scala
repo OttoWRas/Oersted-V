@@ -20,7 +20,7 @@ class DecodeIType (dut: Decoder) extends PeekPokeTester(dut) {
 
         val bitString = rd | opcode | rs1 | imm 
 
-        poke(dut.in, bitString)
+        poke(dut.io.in, bitString)
         step(1)
         expect(dut.decoded.opcode, opcode)
         expect(dut.decoded.rd, rd >> 7 )
@@ -52,7 +52,7 @@ class DecodeRType (dut: Decoder) extends PeekPokeTester(dut) {
 
         val bitString = funct7 | rs2 | rs1 | funct3 | rd | opcode 
 
-        poke(dut.in, bitString)
+        poke(dut.io.in, bitString)
         step(1)
         expect(dut.decoded.opcode, opcode)
         expect(dut.decoded.rd, rd >> 7 )
@@ -81,7 +81,7 @@ class DecodeUType (dut: Decoder) extends PeekPokeTester(dut) {
 
         val bitString = imm | rd | opcode
 
-        poke(dut.in, bitString)
+        poke(dut.io.in, bitString)
         step(1)
         expect(dut.decoded.opcode, opcode)
         expect(dut.decoded.rd, rd >> 7 )
@@ -97,3 +97,38 @@ class UTypeSpec extends FlatSpec with Matchers {
   }
 }
 
+
+/* WIP
+class DecodeJType (dut: Decoder) extends PeekPokeTester(dut) {
+    for(i <- 0 to 100) {
+        val r = new scala.util.Random
+      
+        val opcode = OP_JAL
+        val rd  = BigInt(r.nextInt(32) << 7)
+        val imm19to12 = BigInt(r.nextInt(2^8)) << 12 
+        val imm11 = BigInt(r.nextInt(1)) << 20
+        val imm10to1 = BigInt(r.nextInt(2^10)) << 21
+        val imm20 = BigInt(r.nextInt(1)) << 31
+      
+       
+       // val bitString = imm20 | imm10to1 | imm11 | imm19to12  | rd | opcode
+        val bitString = imm20 | imm10to1 | imm11 | imm19to12 | rd | opcode
+        //20 10:1 11 19:12
+        val imm = (imm20 | imm19to12 | imm11 | imm10to1) << 12
+        
+        poke(dut.in, bitString)
+        step(1)
+        expect(dut.decoded.opcode, opcode)
+        expect(dut.decoded.rd, rd >> 7 )
+        expect(dut.decoded.imm, imm >> 12)
+    
+    }
+
+}
+
+class JTypeSpec extends FlatSpec with Matchers {
+  "Instruction type J test (JAL instruction)" should "pass" in {
+    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeJType(c)} should be (true)
+  }
+}
+ */

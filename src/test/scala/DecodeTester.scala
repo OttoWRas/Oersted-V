@@ -16,7 +16,7 @@ class DecodeIType (dut: Decoder) extends PeekPokeTester(dut) {
         val funct7 = 0 
         //val imm = BigInt(r.nextInt(4096)) << 20
 
-        val imm = BigInt(r.nextInt(4096) - 2048) << 20 // doesn't imepl
+        val imm = BigInt(r.nextInt(4096) - 2048) << 20
 
         val bitString = rd | opcode | rs1 | imm 
 
@@ -26,7 +26,7 @@ class DecodeIType (dut: Decoder) extends PeekPokeTester(dut) {
         expect(dut.decoded.rd, rd >> 7 )
         expect(dut.decoded.rs1, rs1 >> 15 )
         expect(dut.decoded.imm, imm >> 20)
-    
+     
     }
 
 }
@@ -36,8 +36,6 @@ class ITypeSpec extends FlatSpec with Matchers {
     chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeIType(c)} should be (true)
   }
 }
-
-
 
 
 
@@ -71,32 +69,31 @@ class RTypeSpec extends FlatSpec with Matchers {
   }
 }
 
+/* is(OP.OP_LUI, OP.OP_AUIPC, OP.OP_JAL){ */
+class DecodeUType (dut: Decoder) extends PeekPokeTester(dut) {
+    for(i <- 0 to 100) {
+        val r = new scala.util.Random
+        val opcodes = Array(OP_LUI.litValue(), OP_AUIPC.litValue())
+        val opcode = opcodes(r.nextInt(1))
+        val rd  = BigInt(r.nextInt(32) << 7)
+        val imm = BigInt(r.nextInt(1048576) - 524288) << 12
+       
 
+        val bitString = imm | rd | opcode
 
+        poke(dut.in, bitString)
+        step(1)
+        expect(dut.decoded.opcode, opcode)
+        expect(dut.decoded.rd, rd >> 7 )
+        expect(dut.decoded.imm, imm >> 12)
+    
+    }
 
-class DecodeTester(dut: Decoder) extends PeekPokeTester(dut) {
-
-
-
-/*
-  poke(dut.in, 0x00200093) // 
-  step(1)
-  expect(dut.decoded.opcode, OP.OP_I)
-  expect(dut.decoded.imm, 2)
-  println ("Immediate is " + peek(dut.decoded.imm).toString + "\n")
-  println ("Opcode is " + peek(dut.decoded.opcode).toString)
-  println("funct3: " + peek(dut.decoded.funct3).toString)
-  println("funct7: " + peek(dut.decoded.funct7).toString)
-  
-  poke(dut.in, 0x002081b3)
-  step(1)
-  expect(dut.decoded.opcode, OP.OP_R)
-  println ("Opcode is " + peek(dut.decoded.opcode).toString)
-*/
 }
 
-class DecoderSpec extends FlatSpec with Matchers {
-  "Decode Tester" should "pass" in {
-    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeTester(c)} should be (true)
+class UTypeSpec extends FlatSpec with Matchers {
+  "Instruction type U test" should "pass" in {
+    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeUType(c)} should be (true)
   }
 }
+

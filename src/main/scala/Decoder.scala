@@ -73,16 +73,17 @@ class JType extends Bundle {
 }
 
 import OP._
-
+import ALU._
 class Decoder extends MultiIOModule {
     val io = IO(new Bundle {
         val in = Input(UInt(32.W))
         val aluOp = Output(UInt(4.W))
     })
     val decoded = IO(Output(new DecodeOut))
+
     val opcode = io.in(6,0)
-    // this feels like it could be smarter? if no default values are given it won't compile
-    decoded.opcode   := opcode // same for all instr
+    
+    decoded.opcode   := opcode 
 
     decoded.rd       := WireDefault(0.U)
     decoded.funct3   := WireDefault(0.U)
@@ -101,8 +102,64 @@ class Decoder extends MultiIOModule {
             decoded.rs1 := R.rs1
             decoded.rs2 := R.rs2
             decoded.funct7 := R.funct7
-
             
+        
+            switch(R.funct3){
+                is(0.U) {
+                    
+                    when(R.funct7 === 0.U){
+                        io.aluOp := ALU_ADD
+                    }.elsewhen(R.funct7 === 2.U){
+                        io.aluOp := ALU_SUB
+                    }
+                 
+                }
+                is(4.U){
+                    io.aluOp := ALU_XOR
+                }
+                is(6.U){
+                    io.aluOp := ALU_OR
+                }
+                is(7.U) {
+                    io.aluOp := ALU_AND
+                }
+                is(1.U){
+                    io.aluOp := ALU_SLL
+                }
+                is(5.U){
+                    when(R.funct7 === 0.U){
+                        io.aluOp := ALU_SRL
+                    }.elsewhen(R.funct7 === 2.U){
+                        io.aluOp := ALU_SRA
+                    }
+                   
+                }
+                is(2.U){
+                    io.aluOp := ALU_SLT
+                }
+                is(3.U){
+                    io.aluOp := ALU_SLTU
+                }
+            }
+
+          /*
+              def ALU_ADD:    UInt = 0.U(4.W)
+    def ALU_SLL:    UInt = 1.U(4.W)
+    def ALU_SEQ:    UInt = 2.U(4.W)
+    def ALU_SNE:    UInt = 3.U(4.W)
+    def ALU_XOR:    UInt = 4.U(4.W)
+    def ALU_SRL:    UInt = 5.U(4.W)
+    def ALU_OR:     UInt = 6.U(4.W)
+    def ALU_AND:    UInt = 7.U(4.W)
+    def ALU_COPY1:  UInt = 8.U(4.W)
+    def ALU_COPY2:  UInt = 9.U(4.W)
+    def ALU_SUB:    UInt = 10.U(4.W)
+    def ALU_SRA:    UInt = 11.U(4.W)
+    def ALU_SLT:    UInt = 12.U(4.W)
+    def ALU_SGE:    UInt = 13.U(4.W)
+    def ALU_SLTU:   UInt = 14.U(4.W)
+    def ALU_SGEU:   UInt = 15.U(4.W)
+    */
         }
         is (OP.OP_I){
             val I = io.in.asTypeOf(new IType)

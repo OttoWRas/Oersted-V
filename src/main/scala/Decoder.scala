@@ -142,24 +142,6 @@ class Decoder extends MultiIOModule {
                 }
             }
 
-          /*
-              def ALU_ADD:    UInt = 0.U(4.W)
-    def ALU_SLL:    UInt = 1.U(4.W)
-    def ALU_SEQ:    UInt = 2.U(4.W)
-    def ALU_SNE:    UInt = 3.U(4.W)
-    def ALU_XOR:    UInt = 4.U(4.W)
-    def ALU_SRL:    UInt = 5.U(4.W)
-    def ALU_OR:     UInt = 6.U(4.W)
-    def ALU_AND:    UInt = 7.U(4.W)
-    def ALU_COPY1:  UInt = 8.U(4.W)
-    def ALU_COPY2:  UInt = 9.U(4.W)
-    def ALU_SUB:    UInt = 10.U(4.W)
-    def ALU_SRA:    UInt = 11.U(4.W)
-    def ALU_SLT:    UInt = 12.U(4.W)
-    def ALU_SGE:    UInt = 13.U(4.W)
-    def ALU_SLTU:   UInt = 14.U(4.W)
-    def ALU_SGEU:   UInt = 15.U(4.W)
-    */
         }
         is (OP.OP_I){
             val I = io.in.asTypeOf(new IType)
@@ -205,32 +187,3 @@ class Decoder extends MultiIOModule {
        
     }
 }
-  /*
-
-
-31:20 for load (type I)
-31:25 and 11:17 for store (type S) (6 + 6)
-31, 7, 30:25 and 11:8 for conditional (type B) (1 + 1 + 6 + 4 = 12 bits)
-
-opcodes can be used to figure out what to sign extend
-
-opcode bit 6: 0 for data transfer (load/store)
-opcode bit 6: 1 for conditional branches
-opcode bit 5: 0 for load
-opcode bit 5: 1 for store
-
-Elaboration: The immediate generation logic must choose between 
-sign-extending
-a 12-bit field in instruction bits 31:20 for load instructions, 
-bits 31:25 and 11:7 for store instructions, 
-
-or bits 31, 7, 30:25, and 11:8 for the conditional branch. Since
-the input is all 32 bits of the instruction, it can use the opcode bits of the instruction
-to select the proper field. RISC-V opcode bit 6 happens to be 0 for data transfer
-instructions and 1 for conditional branches, and RISC-V opcode bit 5 happens to be 0
-for load instructions and 1 for store instructions. Thus, bits 5 and 6 can control a 3:1
-multiplexor inside the immediate generation logic that selects the appropriate 12-bit
-field for load, store, and conditional branch instructions.
-
-*/
-    

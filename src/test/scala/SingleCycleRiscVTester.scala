@@ -5,40 +5,19 @@ import org.scalatest._
 
 
 class RiscVSpec extends FlatSpec with Matchers {
-  "RiscV" should "pass" in {
-    chisel3.iotesters.Driver.execute(Array("--generate-vcd-output", "on"), () => new SingleCycleRiscV()) { c =>
-      new PeekPokeTester(c) {
-
-        def dump() = {
-          var str: String = "";
-          for (i <- 0 until 32) {
-             if(i != 0 && i % 8 == 0){
-            printf("\n")
-          }
-          
-            print(f"x$i%-2d ")
-            //println(f"$name%s is $height%2.2f meters tall")
-            val v = peek(dut.io.regDeb(i))
-            //printf(p"${Hexadecimal(v)}")
-            print(f"$v%08x ")
-
-            //
-          
-        }
-        }
-  
-         for (i <- 0 until 4) { // print until length of program
-         
-          val pc = peek(dut.io.pc)
-          print(f"PC: $pc%x")
-          println()
-          dump()
-          printf("\n")
-          printf("\n\n\n\n\n")
-          step(1)
-        }
-        
-      }
+  "RiscV test" should "pass" in {
+    test(new SingleCycleRiscV).withAnnotations(Seq(WriteVcdAnnotation)) { c=>
+        c.io.fetch.poke(true.B)
+        c.clock.step(20)
+        c.io.instOut.expect(4369.U)
+        c.io.fetch.poke(false.B)
+        c.io.pcPlus.poke(true.B)
+        c.clock.step(1)
+        c.io.pcPlus.poke(false.B)
+        c.io.fetch.poke(true.B)
+        c.clock.step(5)
+        c.io.fetch.poke(false.B)
+        c.clock.step(5)
     }
   }
 }

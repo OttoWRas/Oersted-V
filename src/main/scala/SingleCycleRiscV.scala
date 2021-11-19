@@ -30,7 +30,7 @@ class SingleCycleRiscV extends Module {
   
     control.io.in   := instr.io.instOut(6,0)
    
-    mem.io.wrEnable := control.io.memWrite
+    mem.io.wrEnable := control.io.memWrite //io.wrEnableMem
     mem.io.wrData   := reg.io.rdData2
     mem.io.wrAddr   := alu.io.out
     mem.io.rdAddr   := alu.io.out // ?
@@ -66,7 +66,7 @@ class SingleCycleRiscV extends Module {
     }
 
     pc.io.pcPlus := true.B
-    pc.io.wrEnable := true.Bo // ?? on all the time?w
+    pc.io.wrEnable := true.B // ?? on all the time?w
 
 
   /* debugging connections o*/

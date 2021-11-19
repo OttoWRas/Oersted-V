@@ -6,10 +6,11 @@ import chisel3.util._
 class ProgramCounter extends Module {
     val io = IO(new Bundle {
             val pcPlus   = Input(Bool())
-            val jmpAddr  = Input(UInt(32.W))
+            val jmpAddr  = Input(UInt(32.W)) // x
             val wrEnable = Input(Bool())
-            val flagOut  = Output(Bool())
             val flagIn   = Input(Bool())
+
+            val flagOut  = Output(Bool()) // x
             val pcAddr   = Output(UInt(32.W))
     })
 

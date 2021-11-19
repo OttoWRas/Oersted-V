@@ -12,7 +12,7 @@ class ControlTester(dut: Control) extends PeekPokeTester(dut) {
     val opcodes  = Array(OP_R, OP_I, OP_IL, OP_IE, OP_S, OP_B, OP_JAL, OP_JALR, OP_LUI, OP_AUIPC)
     val opPoke   = opcodes(r.nextInt(10))
     
-    val opLit = opPoke.litValue()  
+    val opLit    = opPoke.litValue()  
     val regWrite = opLit & 1
     val ALUSrc   = opLit & (1<<1)
     val memWrite = opLit & (1<<2)

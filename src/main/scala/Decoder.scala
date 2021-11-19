@@ -93,6 +93,7 @@ class Decoder extends MultiIOModule {
     decoded.imm      := WireDefault(0.S)
     io.aluOp         := WireDefault(0.U)
 
+
     switch(opcode) {
         is(OP.OP_R){
             val R = io.in.asTypeOf(new RType)
@@ -151,10 +152,12 @@ class Decoder extends MultiIOModule {
             /* sign extension of immediate */
             when(I.imm(11) & true.B) { //check if sign bit is 1
                 decoded.imm := I.imm | "hFFFFF000".U.asSInt // extend with 1's
+                
             }.otherwise {
                 decoded.imm := I.imm | "h00000000".U.asSInt // otherwise, extend with alot of 0's.. 
+                
             }
-            
+
             /* determine ALU operation */
             switch(I.funct3){
                 is(0.U){

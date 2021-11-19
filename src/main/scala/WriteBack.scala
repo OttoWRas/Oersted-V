@@ -9,6 +9,7 @@ class WriteBack extends Module {
         val memSel   = Input(Bool())
         val memData  = Input(UInt(32.W))
         val aluData  = Input(UInt(32.W))
+        
         val wrBack   = Output(UInt(32.W))
     })
 

@@ -14,13 +14,13 @@ class WriteBack extends Module {
 
     io.wrBack := WireDefault(0.U)
 
-    when (wrEnable) {
-        when (memSel) {
+    when (io.wrEnable) {
+        when (io.memSel) {
             io.wrBack := io.memData
         } .otherwise {
             io.wrBack := io.aluData
         }
     }
 
-    
+
 }

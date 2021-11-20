@@ -5,10 +5,6 @@ import org.scalatest._
 import chiseltest._
 import chisel3._
 
-
-
-
-
 class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
   "MAIN tester" should "pass" in {
     test(new SingleCycleRiscV("./testData/instructions.hex.txt")) { m=>
@@ -16,8 +12,10 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     for (w <- 0 to 20) {
         //m.io.rdAddr.poke((4*w).U)
         m.clock.step(1)
-        print(f"PC: " + m.io.pcDebug.peek())
-        print(f"data: " + m.io.instrDebug.peek())
+       var pc = m.io.pcDebug.peek().litValue()
+       var ins =  m.io.instrDebug.peek().litValue()
+        print(f"rdAddr: $pc%x => ")
+        print(f"rdData: $ins%8x")
         println()
         //m.io.rdData.expect(Integer.parseInt(a.slice(w,w+1), 16).U)
       }

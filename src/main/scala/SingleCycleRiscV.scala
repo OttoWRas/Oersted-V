@@ -10,9 +10,10 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val instrDebug = Output(UInt(32.W))
   })
 
-    val mem  = Module(new Memory(program))
-    val pc  = Module(new ProgramCounter)
-    val ins = Module(new InstBuff)
+    val mem   = Module(new Memory(program))
+    val pc    = Module(new ProgramCounter)
+    val ins   = Module(new InstBuff)
+    val ctrl  = Module(new Control)
 
     pc.io.flagIn := ins.io.flagOut
     pc.io.pcPlus := true.B
@@ -22,11 +23,12 @@ class SingleCycleRiscV(program: String = "") extends Module {
     ins.io.flagIn := pc.io.flagOut
     ins.io.instIn := mem.io.rdData
 
-    mem.io.wrEnable := false.B //control.io.memWrite //io.wrEnableMem
+    mem.io.wrEnable := ctrl.io.memWrite //io.wrEnableMem
     mem.io.wrData   := 0.U //reg.io.rdData2
     mem.io.wrAddr   := 0.U // alu.io.out
     mem.io.rdAddr := pc.io.pcAddr>>2 // divide by 4
 
+    ctrl.io.in := ins.io.instOut
 
 
 

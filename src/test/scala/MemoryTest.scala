@@ -73,4 +73,20 @@ class Memorytest extends FlatSpec with ChiselScalatestTester with Matchers {
     println(" ")
     }
   }
+
+  "Instruction load test" should "pass" in {
+    test(new Memory("./testData/instructions.hex.txt")) { m=>
+
+    val a = "deadbeef"
+    print("Beeftest: ")
+
+    for (w <- 0 to 2) {
+        m.io.rdAddr.poke(w.U)
+        m.clock.step(1)
+        print(f"data: " + m.io.rdData.peek())
+        //m.io.rdData.expect(Integer.parseInt(a.slice(w,w+1), 16).U)
+      }
+    println(" ")
+    }
+  }
 }

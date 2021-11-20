@@ -58,7 +58,6 @@ class SingleCycleRiscV extends Module {
 
     alu.io.data1    := reg.io.rdData1
 
-
     when(control.io.ALUSrc){
       alu.io.data2 := reg.io.rdData2 // this should actually be the immediate 
     }.otherwise {
@@ -71,7 +70,7 @@ class SingleCycleRiscV extends Module {
 
   /* debugging connections o*/
     io.pcDebug := pc.io.pcAddr
-    io.instrDebug := instr.io.instOut
+    io.instrDebug := mem.io.rdData
     io.done := true.B
 
   /* fill up debugging reigster with actual registers */

@@ -79,18 +79,18 @@ class Decoder extends MultiIOModule {
         val in = Input(UInt(32.W))
         val aluOp = Output(UInt(4.W))
     })
-    val decoded = IO(Output(new DecodeOut))
+    val out = IO(Output(new DecodeOut))
 
     val opcode = io.in(6,0)
     
-    decoded.opcode   := opcode 
+    out.opcode   := opcode 
 
-    decoded.rd       := WireDefault(0.U)
-    decoded.funct3   := WireDefault(0.U)
-    decoded.rs1      := WireDefault(0.U)
-    decoded.rs2      := WireDefault(0.U)
-    decoded.funct7   := WireDefault(0.U)
-    decoded.imm      := WireDefault(0.S)
+    out.rd       := WireDefault(0.U)
+    out.funct3   := WireDefault(0.U)
+    out.rs1      := WireDefault(0.U)
+    out.rs2      := WireDefault(0.U)
+    out.funct7   := WireDefault(0.U)
+    out.imm      := WireDefault(0.S)
     io.aluOp         := WireDefault(0.U)
 
 
@@ -98,11 +98,11 @@ class Decoder extends MultiIOModule {
         is(OP.OP_R){
             val R = io.in.asTypeOf(new RType)
 
-            decoded.rd := R.rd
-            decoded.funct3 := R.funct3
-            decoded.rs1 := R.rs1
-            decoded.rs2 := R.rs2
-            decoded.funct7 := R.funct7
+            out.rd := R.rd
+            out.funct3 := R.funct3
+            out.rs1 := R.rs1
+            out.rs2 := R.rs2
+            out.funct7 := R.funct7
             
             switch(R.funct3){
                 is(0.U) {
@@ -145,16 +145,16 @@ class Decoder extends MultiIOModule {
         is (OP.OP_I){
             val I = io.in.asTypeOf(new IType)
 
-            decoded.rd      := I.rd
-            decoded.funct3  := I.funct3
-            decoded.rs1     := I.rs1
+            out.rd      := I.rd
+            out.funct3  := I.funct3
+            out.rs1     := I.rs1
 
             /* sign extension of immediate */
             when(I.imm(11) & true.B) { //check if sign bit is 1
-                decoded.imm := I.imm | "hFFFFF000".U.asSInt // extend with 1's
+                out.imm := I.imm | "hFFFFF000".U.asSInt // extend with 1's
                 
             }.otherwise {
-                decoded.imm := I.imm | "h00000000".U.asSInt // otherwise, extend with alot of 0's.. 
+                out.imm := I.imm | "h00000000".U.asSInt // otherwise, extend with alot of 0's.. 
                 
             }
 
@@ -195,26 +195,26 @@ class Decoder extends MultiIOModule {
         is(OP_LUI, OP_AUIPC){
             val U = io.in.asTypeOf(new UType)
             
-            decoded.rd := U.rd
-            decoded.imm := U.imm31to12 
+            out.rd := U.rd
+            out.imm := U.imm31to12 
         }
 
          /*
         is(OP.OP_B, OP.OP_S){
            val SB = in.asTypeOf(new SBType)
             
-            decoded.funct3  := SB.funct3
-            decoded.rs1     := SB.rs1
-            decoded.rs2     := SB.rs2
-            decoded.imm     := SB.imm12 ## SB.imm11 ## SB.imm10to5 ## SB.imm4to1 ## 0.U(1.W) // combining immediates for both S and B type
+            out.funct3  := SB.funct3
+            out.rs1     := SB.rs1
+            out.rs2     := SB.rs2
+            out.imm     := SB.imm12 ## SB.imm11 ## SB.imm10to5 ## SB.imm4to1 ## 0.U(1.W) // combining immediates for both S and B type
 
         }*/
         // J type (WIP)
         is(OP_JAL){
             val J = io.in.asTypeOf(new JType)
             
-            decoded.rd := J.rd
-            decoded.imm := (J.imm20 ## J.imm19to12 ## J.imm11 ## J.imm10to1).asSInt
+            out.rd := J.rd
+            out.imm := (J.imm20 ## J.imm19to12 ## J.imm11 ## J.imm10to1).asSInt
         }
        
     }

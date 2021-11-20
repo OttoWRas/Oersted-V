@@ -38,9 +38,9 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
     reg.io.wrEnable := ctrl.io.regWrite
     reg.io.wrData   := wb.io.wrBack
-    reg.io.wrAddr   := dec.decoded.rd
-    reg.io.rdAddr1  := dec.decoded.rs1
-    reg.io.rdAddr2  := dec.decoded.rs2
+    reg.io.wrAddr   := dec.out.rd
+    reg.io.rdAddr1  := dec.out.rs1
+    reg.io.rdAddr2  := dec.out.rs2
 
     /* decode */
     dec.io.in       := ins.io.instOut
@@ -50,7 +50,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     alu.io.data1    := reg.io.rdData1
     alu.io.data2    := WireDefault(0.U)
     when(ctrl.io.ALUSrc){
-      alu.io.data2 := dec.decoded.imm.asUInt // needs immediate handling
+      alu.io.data2 := dec.out.imm.asUInt // needs immediate handling
     }.otherwise {
       alu.io.data2 := reg.io.rdData2 // this should actually be the immediate 
     }
@@ -73,7 +73,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
     for(i <- 0 to 31){
       reg.io.wrEnable := false.B 
-      
+
       reg.io.rdAddr1 := i.asUInt
       io.regDebug(i) := reg.io.rdData1
     }

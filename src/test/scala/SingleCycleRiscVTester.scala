@@ -7,41 +7,23 @@ import chisel3._
 
 
 
-class RiscVTester(dut: SingleCycleRiscV) extends PeekPokeTester(dut) {
-  def dump() = {
-    for (i <- 0 until 31) {
-        if(i != 0 && i % 8 == 0){
-      printf("\n")
+
+
+class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
+  "MAIN tester" should "pass" in {
+    test(new SingleCycleRiscV("./testData/instructions.hex.txt")) { m=>
+
+    for (w <- 0 to 20) {
+        m.io.rdAddr.poke((4*w).U)
+        m.clock.step(1)
+        print(f"data: " + m.io.instrDebug.peek())
+        println()
+        //m.io.rdData.expect(Integer.parseInt(a.slice(w,w+1), 16).U)
+      }
+    println(" ")
     }
-
-      print(f"x$i%-2d ")
-    
-      val v = peek(dut.io.regDebug(i))
- 
-      print(f"$v%08x ")
-    }
-  }
-
-
-  for (i <- 0 until 16) { // print until length of program
-    val pc = peek(dut.io.pcDebug)
-    val instruction = peek(dut.io.instrDebug)
-    //val v = peek(dut.io.regDebug(6))
-    print(f"PC: $pc%x \n")
-    print(f"instr: $instruction")
-    println()
-    println()
-    step(1)
-  }
-
-}
-
-class RiscVSpec extends FlatSpec with Matchers {
-  "RiscV main tester" should "pass" in {
-    chisel3.iotesters.Driver(() => new SingleCycleRiscV()) { c => new RiscVTester(c)} should be (true)
   }
 }
-
 
 
 // class RiscVSpec extends FlatSpec with Matchers {
@@ -61,3 +43,18 @@ class RiscVSpec extends FlatSpec with Matchers {
 //     }
 //   }
 // }
+
+
+  // def dump() = {
+  //   for (i <- 0 until 31) {
+  //       if(i != 0 && i % 8 == 0){
+  //     printf("\n")
+  //   }
+
+  //     print(f"x$i%-2d ")
+    
+  //     val v = peek(dut.io.regDebug(i))
+ 
+  //     print(f"$v%08x ")
+  //   }
+  // }

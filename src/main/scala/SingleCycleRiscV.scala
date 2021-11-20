@@ -3,80 +3,55 @@ package core
 import chisel3._
 import chisel3.util._
 
-class SingleCycleRiscV extends Module {
+class SingleCycleRiscV(program: String = "") extends Module {
   val io = IO(new Bundle {
-    val regDebug = Output(Vec(32, UInt(32.W))) // debug output for the tester
+    //val regDebug = Output(Vec(32, UInt(32.W))) // debug output for the tester
     val pcDebug  = Output(UInt(32.W))
     val instrDebug = Output(UInt(32.W))
-    val done     = Output(Bool())
+    val rdAddr = Input(UInt(32.W))
+    //val done     = Output(Bool())
   })
 
-    val pc      = Module(new ProgramCounter)
-    val instr   = Module(new InstBuff)
-    val reg     = Module(new Registers)
-    val alu     = Module(new ALU)
-    val decode  = Module(new Decoder)
-    val mem     = Module(new Memory("./testData/instructions.hex.txt"))
-    val wb      = Module(new WriteBack)
-    val control = Module(new Control)
+    val mem  = Module(new Memory(program))
+    val pc = RegInit(0.U(32.W))
 
-    instr.io.instIn := mem.io.rdData 
-    pc.io.flagIn    := instr.io.flagOut
-    pc.io.jmpAddr   := WireDefault(0.U) // no jump instr yet
+    mem.io.wrEnable := false.B //control.io.memWrite //io.wrEnableMem
+    mem.io.wrData   := 0.U //reg.io.rdData2
+    mem.io.wrAddr   := 0.U // alu.io.out
 
-    instr.io.flagIn := pc.io.flagOut
+    mem.io.rdAddr := pc>>2
+
+//   mem.io.wrEnable := false.B //control.io.memWrite //io.wrEnableMem
+//   mem.io.wrData   := 0.U //reg.io.rdData2
+//   mem.io.wrAddr   := 0.U // alu.io.out
+
+//    mem.io.rdAddr := pc
+//     // printf("mem.io.rdAddr = %d\n", mem.io.rdAddr)
+//     // printf("mem.io.rdData = %d\n\n", mem.io.rdData)
+
   
-    control.io.in   := instr.io.instOut(6,0)
-   
-    mem.io.wrEnable := 0.U //control.io.memWrite //io.wrEnableMem
-    mem.io.wrData   := reg.io.rdData2
-    mem.io.wrAddr   := alu.io.out
-    mem.io.rdAddr   := 0.U
-    //mem.io.rdAddr   := alu.io.out // ?
-
-    decode.io.in    := instr.io.instOut
-    alu.io.opcode   := decode.io.aluOp
-
-    wb.io.memData   := mem.io.wrData 
-    wb.io.aluData   := alu.io.out
-    wb.io.memSel    := control.io.memToReg
-    
-    // this seems a bit double, but is it for some hazard prevention later on? nahh im just dubm :)
-    when(control.io.memToReg){
-      wb.io.wrEnable := 1.U
-    }.otherwise {
-      wb.io.wrEnable := 0.U
-    }
-
-    reg.io.wrEnable := control.io.regWrite
-    reg.io.wrData   := wb.io.wrBack
-    reg.io.wrAddr   := decode.decoded.rd
-
-    reg.io.rdAddr1   := decode.decoded.rs1
-    reg.io.rdAddr2   := decode.decoded.rs2
-
-    alu.io.data1    := reg.io.rdData1
-
-    when(control.io.ALUSrc){
-      alu.io.data2 := reg.io.rdData2 // this should actually be the immediate 
-    }.otherwise {
-      alu.io.data2 := decode.decoded.imm.asUInt // needs immediate handling
-    }
-
-    pc.io.pcPlus := true.B
-    pc.io.wrEnable := true.B // ?? on all the time?w
+pc := pc + 4.U
+  
 
 
-  /* debugging connections o*/
-    io.pcDebug := pc.io.pcAddr
-    io.instrDebug := mem.io.rdData // instr.io.instOut
-    io.done := true.B
+//     // mem.io.wrData := io.wrData
+//   // mem.io.wrAddr := io.wrAddr     
 
-  /* fill up debugging reigster with actual registers */
-    for(i <- 0 to 31){
-      reg.io.rdAddr1 := i.asUInt
-      io.regDebug(i) := reg.io.rdData1
-    }
+//     // when (io.fetch) {
+//     //     mem.io.rdAddr := pc.io.pcAddr
+//     // }
+
+//     // io.instOut := instr.io.instOut 
+
+
+
+
+
+
+
+    /* debugging outputs */
+    io.pcDebug := io.rdAddr
+    io.instrDebug := mem.io.rdData //instr.io.instOut
 }
 
 object CPU extends App {

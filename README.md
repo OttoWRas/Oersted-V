@@ -10,3 +10,8 @@ OERSTED-V CPU PROJECT
 
 ## Current systems
 A list of all systems that are implemented and a breif description of them.
+
+
+# todo / problems / thoughts
+- 
+PC er n*4, men memory er vel bare 1,2,3,4?

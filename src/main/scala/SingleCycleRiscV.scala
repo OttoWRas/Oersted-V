@@ -42,7 +42,7 @@ class SingleCycleRiscV extends Module {
     wb.io.aluData   := alu.io.out
     wb.io.memSel    := control.io.memToReg
     
-    // this seems a bit double, but is it for some hazard prevention later on?
+    // this seems a bit double, but is it for some hazard prevention later on? nahh im just dubm :)
     when(control.io.memToReg){
       wb.io.wrEnable := 1.U
     }.otherwise{
@@ -58,11 +58,10 @@ class SingleCycleRiscV extends Module {
 
     alu.io.data1    := reg.io.rdData1
 
-
     when(control.io.ALUSrc){
       alu.io.data2 := reg.io.rdData2 // this should actually be the immediate 
     }.otherwise {
-      alu.io.data2 := reg.io.rdData2 // needs immediate handling
+      alu.io.data2 := decode.decoded.imm // needs immediate handling
     }
 
     pc.io.pcPlus := true.B

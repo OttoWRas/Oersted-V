@@ -6,7 +6,7 @@ import chisel3.util._
 class Control extends Module {
     val io = IO {
         new Bundle {
-            val in          = Input(UInt(7.W))
+            val in          = Input(UInt(8.W))
 
             val branch      = Output(Bool())
             val memRead     = Output(Bool())
@@ -15,6 +15,7 @@ class Control extends Module {
             val memWrite    = Output(Bool())
             val ALUSrc      = Output(Bool())
             val regWrite    = Output(Bool())
+            val nextOp      = Output(Bool())
         }
     }
     
@@ -25,6 +26,7 @@ class Control extends Module {
    io.memWrite  := io.in(2)
    io.ALUSrc    := io.in(1)
    io.regWrite  := io.in(0)
+   io.nextOp    := io.in(7)
 
 }
 

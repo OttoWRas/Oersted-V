@@ -14,8 +14,9 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     test(new SingleCycleRiscV("./testData/instructions.hex.txt")) { m=>
 
     for (w <- 0 to 20) {
-        m.io.rdAddr.poke((4*w).U)
+        //m.io.rdAddr.poke((4*w).U)
         m.clock.step(1)
+        print(f"PC: " + m.io.pcDebug.peek())
         print(f"data: " + m.io.instrDebug.peek())
         println()
         //m.io.rdData.expect(Integer.parseInt(a.slice(w,w+1), 16).U)

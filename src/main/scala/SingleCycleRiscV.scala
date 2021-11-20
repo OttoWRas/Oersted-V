@@ -8,8 +8,17 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val regDebug    = Output(Vec(32, UInt(32.W))) // debug output for the tester
     val pcDebug     = Output(UInt(32.W))
     val instrDebug  = Output(UInt(32.W))
+    
+    val opcodeDebug      = Output(UInt(7.W))
+    val rdDebug          = Output(UInt(5.W))
+    val funct3Debug      = Output(UInt(3.W))
+    val rs1Debug         = Output(UInt(5.W))
+    val rs2Debug         = Output(UInt(5.W))
+    val funct7Debug     = Output(UInt(7.W))
+    val immDebug         = Output(SInt(32.W))
    // val done        = Output(Bool())
   })
+    //val decDebug = IO(Output(new DecodeOut))
 
     val mem   = Module(new Memory(program))
     val pc    = Module(new ProgramCounter)
@@ -52,30 +61,40 @@ class SingleCycleRiscV(program: String = "") extends Module {
     when(ctrl.io.ALUSrc){
       alu.io.data2 := dec.out.imm.asUInt // needs immediate handling
     }.otherwise {
-      alu.io.data2 := reg.io.rdData2 // this should actually be the immediate 
+      alu.io.data2 := reg.io.rdData2 
     }
     
     /* write back */
-    wb.io.memData   := mem.io.wrData 
+    wb.io.memData   := mem.io.rdData 
     wb.io.aluData   := alu.io.out
     wb.io.memSel    := ctrl.io.memToReg
-    wb.io.wrEnable  := false.B 
-    when(ctrl.io.memToReg){
-      wb.io.wrEnable := true.B
-    }.otherwise {
-      wb.io.wrEnable := false.B 
-    }
+    wb.io.wrEnable  := ctrl.io.memToReg
+    // //wb.io.wrEnable  := false.B 
+    // when(ctrl.io.memToReg){
+    //   wb.io.wrEnable := true.B
+    // }.otherwise {
+    //   wb.io.wrEnable := false.B 
+    // }
 
 
     /* debugging outputs */
     io.pcDebug := pc.io.pcAddr>>2
     io.instrDebug := ins.io.instOut // mem.io.rdData //instr.io.instOut
 
-    for(i <- 0 to 31){
-      reg.io.wrEnable := false.B 
 
-      reg.io.rdAddr1 := i.asUInt
-      io.regDebug(i) := reg.io.rdData1
+    io.opcodeDebug := dec.out.opcode
+    io.rdDebug := dec.out.rd
+    io.funct3Debug := dec.out.funct3
+    io.rs1Debug := dec.out.rs1
+    io.rs2Debug := dec.out.rs2
+    io.funct7Debug := dec.out.funct7
+    io.immDebug := dec.out.imm
+
+   // io.regDebug := reg.io.debugOut
+
+    for(i <- 0 to 31){
+  
+      io.regDebug(i) := reg.io.debugOut(i)
     }
 }
 

@@ -13,6 +13,8 @@ class Registers extends Module {
 
         val rdData1  = Output(UInt(32.W))
         val rdData2  = Output(UInt(32.W))
+
+        val debugOut =  Output(Vec(32, UInt(32.W)))
     })
 
     val registerFile = Reg(Vec (32, UInt (32.W)))
@@ -27,4 +29,6 @@ class Registers extends Module {
         io.rdData1 := registerFile(io.rdAddr1)
         io.rdData2 := registerFile(io.rdAddr2)
     }
+
+   io.debugOut := registerFile
 }

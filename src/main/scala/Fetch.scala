@@ -37,9 +37,10 @@ class ProgramCounter extends Module {
 class InstBuff extends Module {
     val io = IO(new Bundle {
             val instIn   = Input(UInt(32.W))
+            val flagIn   = Input(Bool())
+            
             val instOut  = Output(UInt(32.W))
             val flagOut  = Output(Bool())
-            val flagIn   = Input(Bool())
     })
 
     val flag = RegInit(false.B)

@@ -28,9 +28,9 @@ class RiscVTester(dut: SingleCycleRiscV) extends PeekPokeTester(dut) {
     val instruction = peek(dut.io.instrDebug)
     //val v = peek(dut.io.regDebug(6))
     print(f"PC: $pc%x \n")
-   print(f"instr: $instruction")
-  println()
-  println()
+    print(f"instr: $instruction")
+    println()
+    println()
     step(1)
   }
 

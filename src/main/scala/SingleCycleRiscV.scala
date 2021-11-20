@@ -3,7 +3,6 @@ package core
 import chisel3._
 import chisel3.util._
 
-
 class SingleCycleRiscV extends Module {
   val io = IO(new Bundle {
     val regDebug = Output(Vec(32, UInt(32.W))) // debug output for the tester
@@ -21,7 +20,6 @@ class SingleCycleRiscV extends Module {
     val wb      = Module(new WriteBack)
     val control = Module(new Control)
 
-
     instr.io.instIn := mem.io.rdData 
     pc.io.flagIn    := instr.io.flagOut
     pc.io.jmpAddr   := WireDefault(0.U) // no jump instr yet
@@ -30,10 +28,11 @@ class SingleCycleRiscV extends Module {
   
     control.io.in   := instr.io.instOut(6,0)
    
-    mem.io.wrEnable := control.io.memWrite //io.wrEnableMem
+    mem.io.wrEnable := 0.U //control.io.memWrite //io.wrEnableMem
     mem.io.wrData   := reg.io.rdData2
     mem.io.wrAddr   := alu.io.out
-    mem.io.rdAddr   := alu.io.out // ?
+    mem.io.rdAddr   := 0.U
+    //mem.io.rdAddr   := alu.io.out // ?
 
     decode.io.in    := instr.io.instOut
     alu.io.opcode   := decode.io.aluOp
@@ -45,7 +44,7 @@ class SingleCycleRiscV extends Module {
     // this seems a bit double, but is it for some hazard prevention later on? nahh im just dubm :)
     when(control.io.memToReg){
       wb.io.wrEnable := 1.U
-    }.otherwise{
+    }.otherwise {
       wb.io.wrEnable := 0.U
     }
 
@@ -61,7 +60,7 @@ class SingleCycleRiscV extends Module {
     when(control.io.ALUSrc){
       alu.io.data2 := reg.io.rdData2 // this should actually be the immediate 
     }.otherwise {
-      alu.io.data2 := decode.decoded.imm // needs immediate handling
+      alu.io.data2 := decode.decoded.imm.asUInt // needs immediate handling
     }
 
     pc.io.pcPlus := true.B
@@ -70,7 +69,7 @@ class SingleCycleRiscV extends Module {
 
   /* debugging connections o*/
     io.pcDebug := pc.io.pcAddr
-    io.instrDebug := mem.io.rdData
+    io.instrDebug := mem.io.rdData // instr.io.instOut
     io.done := true.B
 
   /* fill up debugging reigster with actual registers */

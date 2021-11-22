@@ -28,11 +28,11 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
         /*
         */
        // print(f"decoder: " + m.io.decDebug.peek())
- for(i <- 0 until 3){
+ for(i <- 0 until 32){
+   if(i != 0 && i % 8 == 0) { print(f"\n") } 
           var v = m.io.regDebug(i).peek().litValue() // peek(dut.io.regDebug(i))
           print(f"x$i%-2d ")
-           print(f"$v \n")
-          //print(f"$v%08x \n")
+          print(f"$v%08x ")
         }
       }
      

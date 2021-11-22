@@ -46,7 +46,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     ctrl.io.in      := ins.io.instOut
 
     reg.io.wrEnable := ctrl.io.regWrite
-    reg.io.wrData   := wb.io.wrBack
+    reg.io.wrData   := wb.io.wrBack 
     reg.io.wrAddr   := dec.out.rd
     reg.io.rdAddr1  := dec.out.rs1
     reg.io.rdAddr2  := dec.out.rs2
@@ -67,8 +67,8 @@ class SingleCycleRiscV(program: String = "") extends Module {
     /* write back */
     wb.io.memData   := mem.io.rdData 
     wb.io.aluData   := alu.io.out
-    wb.io.memSel    := ctrl.io.memToReg
-    wb.io.wrEnable  := ctrl.io.memToReg
+    wb.io.memToReg    := ~ctrl.io.memToReg
+    wb.io.wrEnable  := true.B //ctrl.io.memToReg
     // //wb.io.wrEnable  := false.B 
     // when(ctrl.io.memToReg){
     //   wb.io.wrEnable := true.B
@@ -93,9 +93,8 @@ class SingleCycleRiscV(program: String = "") extends Module {
    // io.regDebug := reg.io.debugOut
 
     for(i <- 0 to 31){
-      reg.io.rdAddr1 := i.asUInt    
 
-      io.regDebug(i) := reg.io.rdData1
+      io.regDebug(i) := reg.io.regDebug(i)
     }
 }
 

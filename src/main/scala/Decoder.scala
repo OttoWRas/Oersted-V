@@ -91,7 +91,7 @@ class Decoder extends MultiIOModule {
     out.rs2      := WireDefault(0.U)
     out.funct7   := WireDefault(0.U)
     out.imm      := WireDefault(0.S)
-    io.aluOp         := WireDefault(0.U)
+    io.aluOp     := WireDefault(0.U)
 
 
     switch(opcode) {

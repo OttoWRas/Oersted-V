@@ -20,9 +20,9 @@ class Memory(fileToLoad: String = "") extends Module {
     //  printf("rdAddr = %d\n \n", io.rdAddr)
     // printf("rdData = %d\n \n", mem.read(io.rdAddr))
     // printf("data pos 0 = %d", mem.read(0.U))
-    // when (io.wrEnable) {
-    //     mem.write(io.wrAddr, io.wrData)
-    // }
+    when (io.wrEnable) {
+        mem.write(io.wrAddr, io.wrData)
+    }
     if (!(fileToLoad == "")) {
         loadMemoryFromFile(mem, fileToLoad)
         

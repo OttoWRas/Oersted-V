@@ -81,7 +81,7 @@ class MemoryInstructionTest extends FlatSpec with ChiselScalatestTester with Mat
     test(new Memory("./testData/instructions.hex.txt")) { m=>
 
     for (w <- 0 to 20) {
-        m.io.rdAddr.poke((4*w).U)
+        m.io.rdAddr.poke(w.U)
         m.clock.step(1)
         print(f"data: " + m.io.rdData.peek())
         println()

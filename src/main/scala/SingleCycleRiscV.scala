@@ -14,7 +14,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val funct3Debug      = Output(UInt(3.W))
     val rs1Debug         = Output(UInt(5.W))
     val rs2Debug         = Output(UInt(5.W))
-    val funct7Debug     = Output(UInt(7.W))
+    val funct7Debug      = Output(UInt(7.W))
     val immDebug         = Output(SInt(32.W))
    // val done        = Output(Bool())
   })
@@ -93,8 +93,9 @@ class SingleCycleRiscV(program: String = "") extends Module {
    // io.regDebug := reg.io.debugOut
 
     for(i <- 0 to 31){
-  
-      io.regDebug(i) := reg.io.debugOut(i)
+      reg.io.rdAddr1 := i.asUInt    
+
+      io.regDebug(i) := reg.io.rdData1
     }
 }
 

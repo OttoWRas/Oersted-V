@@ -148,15 +148,15 @@ class Decoder extends MultiIOModule {
             out.rd      := I.rd
             out.funct3  := I.funct3
             out.rs1     := I.rs1
-
+            out.imm := I.imm
             /* sign extension of immediate */
-            when(I.imm(11) & true.B) { //check if sign bit is 1
-                out.imm := I.imm | "hFFFFF000".U.asSInt // extend with 1's
+            // when(I.imm(11) & true.B) { //check if sign bit is 1
+            //     out.imm := I.imm | "hFFFFF000".U.asSInt // extend with 1's
                 
-            }.otherwise {
-                out.imm := I.imm | "h00000000".U.asSInt // otherwise, extend with alot of 0's.. 
+            // }.otherwise {
+            //     out.imm := I.imm | "h00000000".U.asSInt // otherwise, extend with alot of 0's.. 
                 
-            }
+            // }
 
             /* determine ALU operation */
             switch(I.funct3){

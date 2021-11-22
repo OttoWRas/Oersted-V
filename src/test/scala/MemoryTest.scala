@@ -4,7 +4,6 @@ import org.scalatest._
 import chiseltest._
 import chisel3._
 
-
 class Memorytest extends FlatSpec with ChiselScalatestTester with Matchers {
   "Memory Write & Read test 1" should "pass" in {
     test(new Memory()) { m=>
@@ -70,7 +69,23 @@ class Memorytest extends FlatSpec with ChiselScalatestTester with Matchers {
         m.io.rdAddr.poke(w.U)
         m.clock.step(10)
         m.io.rdData.expect(Integer.parseInt(a.slice(w,w+1), 16).U)
-        print(m.io.rdData.peek().litValue.intValue().toHexString)
+      }
+    println(" ")
+    }
+  }
+
+}
+
+class MemoryInstructionTest extends FlatSpec with ChiselScalatestTester with Matchers {
+  "Instruction load test" should "pass" in {
+    test(new Memory("./testData/instructions.hex.txt")) { m=>
+
+    for (w <- 0 to 20) {
+        m.io.rdAddr.poke(w.U)
+        m.clock.step(1)
+        print(f"data: " + m.io.rdData.peek())
+        println()
+        //m.io.rdData.expect(Integer.parseInt(a.slice(w,w+1), 16).U)
       }
     println(" ")
     }

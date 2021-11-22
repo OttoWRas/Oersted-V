@@ -2,64 +2,101 @@ package core
 
 import chisel3._
 import chisel3.util._
-/**
-  * Author Martin Schoeberl (martin@jopdesign.com)
-  *
-  * A single-cycle implementation of RISC-V is practically an ISA simulator.
-  */
-class SingleCycleRiscV extends Module {
+
+class SingleCycleRiscV(program: String = "") extends Module {
   val io = IO(new Bundle {
-    val regDeb = Output(Vec(32, UInt(32.W))) // debug output for the tester
-    val pc = Output(UInt(32.W))
-    val done = Output(Bool())
+    val regDebug    = Output(Vec(32, UInt(32.W))) // debug output for the tester
+    val pcDebug     = Output(UInt(32.W))
+    val instrDebug  = Output(UInt(32.W))
+    
+    val opcodeDebug      = Output(UInt(7.W))
+    val rdDebug          = Output(UInt(5.W))
+    val funct3Debug      = Output(UInt(3.W))
+    val rs1Debug         = Output(UInt(5.W))
+    val rs2Debug         = Output(UInt(5.W))
+    val funct7Debug      = Output(UInt(7.W))
+    val immDebug         = Output(SInt(32.W))
+   // val done        = Output(Bool())
   })
+    //val decDebug = IO(Output(new DecodeOut))
 
-  /* set up modules needed */
-  val decoder = Module(new Decoder)
+    val mem   = Module(new Memory(program))
+    val pc    = Module(new ProgramCounter)
+    val ins   = Module(new InstBuff)
+    val ctrl  = Module(new Control)
+    val reg   = Module(new Registers)
+    val dec   = Module(new Decoder)
+    val alu   = Module(new ALU)
+    val wb    = Module(new WriteBack)
 
-  // TODO: the program should be read in from a file
-  val program = Array[Int](
-    0x00200093, // addi x1 x0 2
-    0x00300113, // addi x2 x0 3
-    0x002081b3) // add x3 x1 x2
+    /* fetch / initialization */
+    pc.io.flagIn    := ins.io.flagOut
+    pc.io.pcPlus    := true.B
+    pc.io.jmpAddr   := 0.U
+    pc.io.wrEnable  := false.B
+    
+    ins.io.flagIn   := pc.io.flagOut
+    ins.io.instIn   := mem.io.rdData
 
-  // A little bit of functional magic to convert the Scala Int Array to a Chisel Vec of UInt
-  val imem = VecInit(program.map(_.U(32.W)))
-  val pc = RegInit(0.U(32.W))
+    mem.io.wrEnable := ctrl.io.memWrite
+    mem.io.wrData   := reg.io.rdData2
+    mem.io.wrAddr   := alu.io.out
+    mem.io.rdAddr   := pc.io.pcAddr>>2 /* divide by four so we read addresses 1,2,3,4 instead of 0, 4, 8 etc */
 
-  /* set up 32 registers and init them all to 0 */
-  val vec = Wire(Vec(32, UInt(32.W))) 
-  for (i <- 0 until 32) vec(i) := 0.U
-  
-  val reg = RegInit(vec)
-  val instr = imem(pc(31, 2)) // from 2nd bit since we know bit 0 and 1 are always 0.
+    ctrl.io.in      := ins.io.instOut
 
-  decoder.in := instr
+    reg.io.wrEnable := ctrl.io.regWrite
+    reg.io.wrData   := wb.io.wrBack 
+    reg.io.wrAddr   := dec.out.rd
+    reg.io.rdAddr1  := dec.out.rs1
+    reg.io.rdAddr2  := dec.out.rs2
 
- 
-  val opcode  = decoder.decoded.opcode  
-  val rd      = decoder.decoded.rd       
-  val rs1     = decoder.decoded.rs1
-  val imm     = decoder.decoded.imm
+    /* decode */
+    dec.io.in       := ins.io.instOut
 
-
-  switch(opcode) {
-
-    is(0x13.U) {
-
-      reg(rd) := reg(rs1) + imm
+    /* execute */
+    alu.io.opcode   := dec.io.aluOp
+    alu.io.data1    := reg.io.rdData1
+    alu.io.data2    := WireDefault(0.U)
+    when(ctrl.io.ALUSrc){
+      alu.io.data2 := dec.out.imm.asUInt // needs immediate handling
+    }.otherwise {
+      alu.io.data2 := reg.io.rdData2 
     }
-  }
-  
-  pc := pc + 4.U
-io.pc := pc
-  // done should be set when the program ends, and the tester shall stop
-  io.done := true.B
+    
+    /* write back */
+    wb.io.memData   := mem.io.rdData 
+    wb.io.aluData   := alu.io.out
+    wb.io.memToReg    := ~ctrl.io.memToReg
+    wb.io.wrEnable  := true.B //ctrl.io.memToReg
+    // //wb.io.wrEnable  := false.B 
+    // when(ctrl.io.memToReg){
+    //   wb.io.wrEnable := true.B
+    // }.otherwise {
+    //   wb.io.wrEnable := false.B 
+    // }
 
-  /* fill our debugging registers with the content of our actual registers */
-  for (i <- 0 until 32) io.regDeb(i) := reg(i)
+
+    /* debugging outputs */
+    io.pcDebug := pc.io.pcAddr>>2
+    io.instrDebug := ins.io.instOut // mem.io.rdData //instr.io.instOut
+
+
+    io.opcodeDebug := dec.out.opcode
+    io.rdDebug := dec.out.rd
+    io.funct3Debug := dec.out.funct3
+    io.rs1Debug := dec.out.rs1
+    io.rs2Debug := dec.out.rs2
+    io.funct7Debug := dec.out.funct7
+    io.immDebug := dec.out.imm
+
+   // io.regDebug := reg.io.debugOut
+
+    for(i <- 0 to 31){
+
+      io.regDebug(i) := reg.io.regDebug(i)
+    }
 }
-
 
 object CPU extends App {
   (new chisel3.stage.ChiselStage).emitVerilog(new SingleCycleRiscV)

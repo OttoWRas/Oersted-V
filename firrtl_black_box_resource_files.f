@@ -1,0 +1,1 @@
+/home/istlf/Google Drive/DTU/3. Semester/02155 Computer Architecture/Oersted-V/SingleCycleRiscV.Memory.mem.v

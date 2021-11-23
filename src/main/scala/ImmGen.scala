@@ -38,12 +38,30 @@ class ImmediateGen extends Module {
         
             io.out := immTemp.asSInt
         }
+        is(OP_IL){ // i type LOAD, where we have to zero extend LBU and LHU
+              
+
+            val imm11to0 = io.in(31,20)
+            immTemp := imm11to0
+           
+            when((imm11to0(11) & true.B) & (funct3 =/= 4.U) & (funct3 =/= 5.U)){ // & funct3 =/= 3.U
+                immTemp := imm11to0 | "hFFFFF000".U
+            }
+        
+            io.out := immTemp.asSInt
+        }
         /* in case of S type we need to be a bit more delicate as the immediates are spread out in the instruction */
         is(OP_S){
             val imm11to5 = io.in(31,25)
             val imm4to0 = io.in(11,7)
-            
+            immTemp := imm11to5 ## imm4to0 
+            when(imm11to5(6) & true.B){
+                immTemp := (imm11to5 ## imm4to0) | "hFFFFF000".U 
+            }
+
+            io.out := immTemp.asSInt
         }
+        
     }
    
  

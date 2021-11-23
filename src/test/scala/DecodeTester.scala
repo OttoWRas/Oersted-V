@@ -5,7 +5,6 @@ import org.scalatest._
 import chiseltest._
 import chisel3._
 
-
 import OP._
 import ALU._
 
@@ -173,8 +172,9 @@ class DecodeSTypeTest (dut: Decoder) extends PeekPokeTester(dut) {
       val rs2       = BigInt(r.nextInt(32) << 20)
       val imm       = BigInt(r.nextInt(4096)-2048)
       val imm4to0   = (BigInt(31) & imm) << 7 // 5 bits
-      val imm11to5  = (BigInt(4094) & imm) << 20 // only shifted 20, since it's already shifted 5 because of the bitextraction
-      val funct3    = BigInt(0) << 12
+      /* we need to shift the 11to5 >> 5 first, and then << 25 otherwise it will clash with rs2 */
+      val imm11to5  = ((BigInt(4094) & imm) >>5) << 25
+      val funct3    = BigInt(r.nextInt(3)) << 12
 
       val bitString = imm11to5 | rs2 | rs1 | funct3 | imm4to0 | opcode
       
@@ -182,11 +182,9 @@ class DecodeSTypeTest (dut: Decoder) extends PeekPokeTester(dut) {
       step(4)
       expect(dut.out.opcode, opcode)
       expect(dut.out.imm, imm)
-
-      // m.io.in.poke(bitString.U)
-      // m.clock.step(5)
-      // m.out.opcode.expect(opcode.U)
-      // m.out.imm.expect(imm.S)
+      expect(dut.out.rs1, rs1>>15)
+       expect(dut.out.rs2, rs2>>20)
+      expect(dut.out.funct3, funct3>>12)
     }
 
 }

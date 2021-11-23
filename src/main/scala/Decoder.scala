@@ -50,16 +50,16 @@ class UType extends Bundle {
 }
 
 
-// class SBType extends Bundle { // skal være UInts (Bits)
-//     val imm12 = UInt(1.W)
-//     val imm10to5 = UInt(6.W)
-//     val rs2 = UInt(5.W)
-//     val rs1 = UInt(5.W)
-//     val funct3 = UInt(3.W)
-//     val imm4to1 = UInt(5.W)
-//     val imm11 = UInt(1.W)
-//     val opcode = UInt(7.W)
-// }
+class BType extends Bundle { // skal være UInts (Bits)
+    val imm12 = UInt(1.W)
+    val imm10to5 = UInt(6.W)
+    val rs2 = UInt(5.W)
+    val rs1 = UInt(5.W)
+    val funct3 = UInt(3.W)
+    val imm4to1 = UInt(4.W)
+    val imm11 = UInt(1.W)
+    val opcode = UInt(7.W)
+}
 class SType extends Bundle { // skal være UInts (Bits)
     val imm11to5 = UInt(7.W)
     val rs2 = UInt(5.W)
@@ -205,7 +205,6 @@ class Decoder extends MultiIOModule {
             out.imm := U.imm31to12.asSInt
         }
 
-         //OP.OP_B, 
         is(OP.OP_S){
            val S = io.in.asTypeOf(new SType)
             

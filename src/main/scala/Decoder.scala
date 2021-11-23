@@ -115,7 +115,7 @@ class Decoder extends MultiIOModule {
                 is(0.U) {
                     io.aluOp := ALU_ADD // funct7 === 0
         
-                    when(R.funct7 === 2.U){
+                    when(R.funct7 === 32.U){
                         io.aluOp := ALU_SUB
                     }
                 }
@@ -126,7 +126,7 @@ class Decoder extends MultiIOModule {
                 is(5.U){
                     io.aluOp := ALU_SRL // funct7 === 0
                     
-                    when(R.funct7 === 2.U){
+                    when(R.funct7 === 32.U){
                         io.aluOp := ALU_SRA
                     }
                 }

@@ -105,7 +105,7 @@ class DecodeRALUTest (dut: Decoder) extends PeekPokeTester(dut) {
         val opcode = OP_R.litValue()
 
         val funct3s = Array(0, 4, 6, 7, 1, 5, 2, 3)
-        val funct7s = Array(0, 2)
+        val funct7s = Array(0, 32)
         val funct3 = BigInt(funct3s(r.nextInt(8))) << 12
         val funct7 = BigInt(funct7s(r.nextInt(2))) << 25
         val rd  = BigInt(r.nextInt(32) << 7)

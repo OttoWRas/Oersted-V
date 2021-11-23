@@ -20,33 +20,23 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
        var rs2 = m.io.rs2Debug.peek().litValue()
        var imm = m.io.immDebug.peek().litValue()
 
-
        // print(f"rdAddr: $pc%x => ")
        // print(f"rdData: $ins%8x\n \n\n")
         println()
         print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\n\n")
-        /*
-        */
+        
        // print(f"decoder: " + m.io.decDebug.peek())
  for(i <- 0 until 32){
    if(i != 0 && i % 8 == 0) { print(f"\n") } 
           var v = m.io.regDebug(i).peek().litValue() // peek(dut.io.regDebug(i))
           print(f"x$i%-2d ")
-          print(f"$v%08x ")
+          print(f"$v%d ")
+          //print(f"$v%08x ")
         }
-      }
-     
-    //  for (i <- 0 until 31) {
-    //   if(i != 0 && i % 8 == 0) { printf("\n") } 
-
-    //   print(f"x$i%-2d ")
-    //   val v = m.io.regDebug(2).peek().litValue // peek(dut.io.regDebug(i))
-    //   print(f"$v%08x ")
-    // }
-
     println(" ")
     }
   }
+}
 }
 
 /*

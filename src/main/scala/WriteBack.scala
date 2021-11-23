@@ -6,7 +6,7 @@ import chisel3.util._
 class WriteBack extends Module {
     val io = IO(new Bundle {
         val wrEnable = Input(Bool())
-        val memToReg   = Input(Bool())
+        val memToReg = Input(Bool())
         val memData  = Input(UInt(32.W))
         val aluData  = Input(UInt(32.W))
         

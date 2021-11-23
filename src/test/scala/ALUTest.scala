@@ -21,7 +21,7 @@ class ALUtest extends FlatSpec with ChiselScalatestTester with Matchers {
         c.io.out.expect((a+b).U)
         c.io.opcode.poke(ALU_SUB)
         c.clock.step(10)
-        if (a<b) {
+        if (a<b) {         
           c.io.out.expect((4294967296l-((a-b).abs)).U)
         } else {
           c.io.out.expect((a-b).U)

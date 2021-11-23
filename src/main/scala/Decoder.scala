@@ -36,17 +36,17 @@ class RType extends Bundle {
 }
 
 class IType extends Bundle {
-    val imm     = Output(UInt(12.W))
-    val rs1     = Output(UInt(5.W))
-    val funct3  = Output(UInt(3.W))
-    val rd      = Output(UInt(5.W))
-    val opcode  = Output(UInt(7.W))
+    val imm11to0    = Output(UInt(12.W))
+    val rs1         = Output(UInt(5.W))
+    val funct3      = Output(UInt(3.W))
+    val rd          = Output(UInt(5.W))
+    val opcode      = Output(UInt(7.W))
 }
 
 class UType extends Bundle {
-    val imm31to12 = Output(UInt(20.W))
-    val rd = Output(UInt(5.W))
-    val opcode = Output(UInt(7.W))
+    val imm31to12   = Output(UInt(20.W))
+    val rd          = Output(UInt(5.W))
+    val opcode      = Output(UInt(7.W))
 }
 
 
@@ -113,39 +113,25 @@ class Decoder extends MultiIOModule {
             
             switch(R.funct3){
                 is(0.U) {
-                    
-                    when(R.funct7 === 0.U){
-                        io.aluOp := ALU_ADD
-                    }.elsewhen(R.funct7 === 2.U){
+                    io.aluOp := ALU_ADD // funct7 === 0
+        
+                    when(R.funct7 === 2.U){
                         io.aluOp := ALU_SUB
                     }
                 }
-                is(4.U){
-                    io.aluOp := ALU_XOR
-                }
-                is(6.U){
-                    io.aluOp := ALU_OR
-                }
-                is(7.U) {
-                    io.aluOp := ALU_AND
-                }
-                is(1.U){
-                    io.aluOp := ALU_SLL
-                }
+                is(4.U){ io.aluOp := ALU_XOR }
+                is(6.U){ io.aluOp := ALU_OR }
+                is(7.U){ io.aluOp := ALU_AND }
+                is(1.U){ io.aluOp := ALU_SLL }
                 is(5.U){
-                    when(R.funct7 === 0.U){
-                        io.aluOp := ALU_SRL
-                    }.elsewhen(R.funct7 === 2.U){
+                    io.aluOp := ALU_SRL // funct7 === 0
+                    
+                    when(R.funct7 === 2.U){
                         io.aluOp := ALU_SRA
                     }
-                   
                 }
-                is(2.U){
-                    io.aluOp := ALU_SLT
-                }
-                is(3.U){
-                    io.aluOp := ALU_SLTU
-                }
+                is(2.U){ io.aluOp := ALU_SLT }
+                is(3.U){ io.aluOp := ALU_SLTU }
             }
 
         }
@@ -156,44 +142,29 @@ class Decoder extends MultiIOModule {
             out.funct3  := I.funct3
             out.rs1     := I.rs1
             val immTemp = Wire(UInt(32.W))
-            immTemp     := I.imm
+            immTemp     := I.imm11to0
         
             /* sign extension of immediate */
-            when(I.imm(11) & true.B) { //check if sign bit is 1
-                immTemp := I.imm | "hFFFFF000".U // extend with 1's
+            when(I.imm11to0(11) & true.B) { //check if sign bit is 1
+                immTemp := I.imm11to0 | "hFFFFF000".U // extend with 1's
             }
             out.imm := immTemp.asSInt
 
             /* determine ALU operation */
             switch(I.funct3){
-                is(0.U){
-                    io.aluOp := ALU_ADD 
-                }
-                is(4.U){
-                    io.aluOp := ALU_XOR 
-                }
-                is(6.U){
-                    io.aluOp := ALU_OR // 
-                }
-                is(7.U){
-                    io.aluOp := ALU_AND // 
-                }
-                is(1.U){
-                    io.aluOp := ALU_SLL
-                }
+                is(0.U){ io.aluOp := ALU_ADD }
+                is(4.U){ io.aluOp := ALU_XOR }
+                is(6.U){ io.aluOp := ALU_OR  }
+                is(7.U){ io.aluOp := ALU_AND }
+                is(1.U){ io.aluOp := ALU_SLL }
                 is(5.U){
-                    when(I.imm(11,5) === 0.U){
-                        io.aluOp := ALU_SRL
-                    }.elsewhen(I.imm(11,5) === 2.U){
-                        io.aluOp := ALU_SRA
+                    io.aluOp := ALU_SRA //5
+                    when(I.imm11to0(11,5) === 0.U){
+                        io.aluOp := ALU_SRL //11
                     }
                 }
-                is(2.U){
-                    io.aluOp := ALU_SLT
-                }
-                is(3.U){
-                    io.aluOp := ALU_SLTU
-                }
+                is(2.U){ io.aluOp := ALU_SLT }
+                is(3.U){ io.aluOp := ALU_SLTU }
             }
         }
        

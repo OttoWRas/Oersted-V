@@ -36,29 +36,36 @@ class RType extends Bundle {
 }
 
 class IType extends Bundle {
-    val imm     = Output(SInt(12.W))
-    val rs1     = Output(UInt(5.W))
-    val funct3  = Output(UInt(3.W))
-    val rd      = Output(UInt(5.W))
-    val opcode  = Output(UInt(7.W))
+    val imm11to0    = Output(UInt(12.W))
+    val rs1         = Output(UInt(5.W))
+    val funct3      = Output(UInt(3.W))
+    val rd          = Output(UInt(5.W))
+    val opcode      = Output(UInt(7.W))
 }
 
 class UType extends Bundle {
-    val imm31to12 = Output(SInt(20.W))
-    val rd = Output(UInt(5.W))
-    val opcode = Output(UInt(7.W))
+    val imm31to12   = Output(UInt(20.W))
+    val rd          = Output(UInt(5.W))
+    val opcode      = Output(UInt(7.W))
 }
 
 
-
-class SBType extends Bundle {
-    val imm12 = SInt(1.W)
-    val imm10to5 = SInt(6.W)
+class BType extends Bundle { // skal være UInts (Bits)
+    val imm12 = UInt(1.W)
+    val imm10to5 = UInt(6.W)
     val rs2 = UInt(5.W)
     val rs1 = UInt(5.W)
     val funct3 = UInt(3.W)
-    val imm4to1 = SInt(5.W)
-    val imm11 = SInt(1.W)
+    val imm4to1 = UInt(4.W)
+    val imm11 = UInt(1.W)
+    val opcode = UInt(7.W)
+}
+class SType extends Bundle { // skal være UInts (Bits)
+    val imm11to5 = UInt(7.W)
+    val rs2 = UInt(5.W)
+    val rs1 = UInt(5.W)
+    val funct3 = UInt(3.W)
+    val imm4to0 = UInt(5.W)
     val opcode = UInt(7.W)
 }
 
@@ -106,39 +113,25 @@ class Decoder extends MultiIOModule {
             
             switch(R.funct3){
                 is(0.U) {
-                    
-                    when(R.funct7 === 0.U){
-                        io.aluOp := ALU_ADD
-                    }.elsewhen(R.funct7 === 2.U){
+                    io.aluOp := ALU_ADD // funct7 === 0
+        
+                    when(R.funct7 === 32.U){
                         io.aluOp := ALU_SUB
                     }
                 }
-                is(4.U){
-                    io.aluOp := ALU_XOR
-                }
-                is(6.U){
-                    io.aluOp := ALU_OR
-                }
-                is(7.U) {
-                    io.aluOp := ALU_AND
-                }
-                is(1.U){
-                    io.aluOp := ALU_SLL
-                }
+                is(4.U){ io.aluOp := ALU_XOR }
+                is(6.U){ io.aluOp := ALU_OR }
+                is(7.U){ io.aluOp := ALU_AND }
+                is(1.U){ io.aluOp := ALU_SLL }
                 is(5.U){
-                    when(R.funct7 === 0.U){
-                        io.aluOp := ALU_SRL
-                    }.elsewhen(R.funct7 === 2.U){
+                    io.aluOp := ALU_SRL // funct7 === 0
+                    
+                    when(R.funct7 === 32.U){
                         io.aluOp := ALU_SRA
                     }
-                   
                 }
-                is(2.U){
-                    io.aluOp := ALU_SLT
-                }
-                is(3.U){
-                    io.aluOp := ALU_SLTU
-                }
+                is(2.U){ io.aluOp := ALU_SLT }
+                is(3.U){ io.aluOp := ALU_SLTU }
             }
 
         }
@@ -148,46 +141,30 @@ class Decoder extends MultiIOModule {
             out.rd      := I.rd
             out.funct3  := I.funct3
             out.rs1     := I.rs1
-            out.imm := I.imm
+            val immTemp = Wire(UInt(32.W))
+            immTemp     := I.imm11to0
+        
             /* sign extension of immediate */
-            // when(I.imm(11) & true.B) { //check if sign bit is 1
-            //     out.imm := I.imm | "hFFFFF000".U.asSInt // extend with 1's
-                
-            // }.otherwise {
-            //     out.imm := I.imm | "h00000000".U.asSInt // otherwise, extend with alot of 0's.. 
-                
-            // }
+            when(I.imm11to0(11) & true.B) { //check if sign bit is 1
+                immTemp := I.imm11to0 | "hFFFFF000".U // extend with 1's
+            }
+            out.imm := immTemp.asSInt
 
             /* determine ALU operation */
             switch(I.funct3){
-                is(0.U){
-                    io.aluOp := ALU_ADD // should be ADDI?
-                }
-                is(4.U){
-                    io.aluOp := ALU_XOR // should be XORI?
-                }
-                is(6.U){
-                    io.aluOp := ALU_OR // 
-                }
-                is(7.U){
-                    io.aluOp := ALU_AND // 
-                }
-                is(1.U){
-                    io.aluOp := ALU_SLL
-                }
+                is(0.U){ io.aluOp := ALU_ADD }
+                is(4.U){ io.aluOp := ALU_XOR }
+                is(6.U){ io.aluOp := ALU_OR  }
+                is(7.U){ io.aluOp := ALU_AND }
+                is(1.U){ io.aluOp := ALU_SLL }
                 is(5.U){
-                    when(I.imm(11,5) === 0.U){
-                        io.aluOp := ALU_SRL
-                    }.elsewhen(I.imm(11,5) === 2.U){
-                        io.aluOp := ALU_SRA
+                    io.aluOp := ALU_SRA //5
+                    when(I.imm11to0(11,5) === 0.U){
+                        io.aluOp := ALU_SRL //11
                     }
                 }
-                is(2.U){
-                    io.aluOp := ALU_SLT
-                }
-                is(3.U){
-                    io.aluOp := ALU_SLTU
-                }
+                is(2.U){ io.aluOp := ALU_SLT }
+                is(3.U){ io.aluOp := ALU_SLTU }
             }
         }
        
@@ -196,19 +173,28 @@ class Decoder extends MultiIOModule {
             val U = io.in.asTypeOf(new UType)
             
             out.rd := U.rd
-            out.imm := U.imm31to12 
+            out.imm := U.imm31to12.asSInt
         }
 
-         /*
-        is(OP.OP_B, OP.OP_S){
-           val SB = in.asTypeOf(new SBType)
+        is(OP.OP_S){
+           val S = io.in.asTypeOf(new SType)
             
-            out.funct3  := SB.funct3
-            out.rs1     := SB.rs1
-            out.rs2     := SB.rs2
-            out.imm     := SB.imm12 ## SB.imm11 ## SB.imm10to5 ## SB.imm4to1 ## 0.U(1.W) // combining immediates for both S and B type
+            out.funct3  := S.funct3
+            out.rs1     := S.rs1
+            out.rs2     := S.rs2
 
-        }*/
+            val immTemp = Wire(UInt(32.W))
+            immTemp := S.imm11to5 ## S.imm4to0 // ## 0.U(1.W)
+
+            /* sign extension of immediate */
+            when(S.imm11to5(6) & true.B) { //check if sign bit is 1
+                immTemp := (S.imm11to5 ## S.imm4to0) | "hFFFFF000".U // extend with 1's //  ## 0.U(1.W
+            }
+              out.imm := immTemp.asSInt
+
+
+         
+        }
         // J type (WIP)
         is(OP_JAL){
             val J = io.in.asTypeOf(new JType)

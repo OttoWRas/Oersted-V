@@ -61,10 +61,34 @@ class ImmediateGen extends Module {
 
             io.out := immTemp.asSInt
         }
-        
+            /* zero extend in case of funct3 == 6 | funct3 == 7 */
+        is(OP_B){
+            val imm12    = io.in(31)
+            val imm10to5 = io.in(30,25)
+            val imm4to1  = io.in(11,8)
+            val imm11    = io.in(7)
+            
+            /* notice the extra 0 added as LSB. branch instructions will only branch to multiples of 16 bits, ie. no uneven numbers */
+            immTemp := imm12 ## imm11 ## imm10to5 ## imm4to1 ## 0.U(1.W) // ## 0.U(1.W) 
+            // when((imm12 & true.B)){ // & (funct3 =/= 6.U) & (funct3 =/= 7.U)
+            //     immTemp := (imm12 ## imm11 ## imm10to5 ## imm4to1) | "hFFFFF000".U 
+            // }
+
+            io.out := immTemp.asSInt
+        }
+
+        is(OP_LUI, OP_AUIPC){ //, OP_AUIPC
+            val imm = io.in(31,12)
+            immTemp := imm
+            when(imm(19) & true.B){
+                immTemp := imm | "hFFF00000".U 
+            }
+
+            io.out := immTemp.asSInt
+        }
+
     }
-   
- 
+
     
 }
 

@@ -20,14 +20,15 @@ class SingleCycleRiscV(program: String = "") extends Module {
   })
     //val decDebug = IO(Output(new DecodeOut))
 
-    val mem   = Module(new Memory(program))
-    val pc    = Module(new ProgramCounter)
-    val ins   = Module(new InstBuff)
-    val ctrl  = Module(new Control)
-    val reg   = Module(new Registers)
-    val dec   = Module(new Decoder)
-    val alu   = Module(new ALU)
-    val wb    = Module(new WriteBack)
+    val mem    = Module(new Memory(program))
+    val pc     = Module(new ProgramCounter)
+    val ins    = Module(new InstBuff)
+    val ctrl   = Module(new Control)
+    val reg    = Module(new Registers)
+    val dec    = Module(new Decoder)
+    val alu    = Module(new ALU)
+    val wb     = Module(new WriteBack)
+    val imm    = Module(new ImmediateGen)
 
     /* fetch / initialization */
     pc.io.flagIn    := ins.io.flagOut
@@ -53,13 +54,14 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
     /* decode */
     dec.io.in       := ins.io.instOut
+    imm.io.in       := ins.io.instOut
 
     /* execute */
     alu.io.opcode   := dec.io.aluOp
     alu.io.data1    := reg.io.rdData1
     alu.io.data2    := WireDefault(0.U)
     when(ctrl.io.ALUSrc){
-      alu.io.data2 := dec.out.imm.asUInt // needs immediate handling
+      alu.io.data2 := dec.out.imm.asUInt // needs output from immgen
     }.otherwise {
       alu.io.data2 := reg.io.rdData2 
     }

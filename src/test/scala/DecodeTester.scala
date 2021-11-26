@@ -31,11 +31,6 @@ class DecodeIType (dut: Decoder) extends PeekPokeTester(dut) {
 
 }
 
-class ITypeSpec extends FlatSpec with Matchers {
-  "Instruction type I test" should "pass" in {
-    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeIType(c)} should be (true)
-  }
-}
 
 
 
@@ -63,11 +58,6 @@ class DecodeRType (dut: Decoder) extends PeekPokeTester(dut) {
 
 }
 
-class RTypeSpec extends FlatSpec with Matchers {
-  "Instruction type R test" should "pass" in {
-    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeRType(c)} should be (true)
-  }
-}
 
 /* is(OP.OP_LUI, OP.OP_AUIPC, OP.OP_JAL){ */
 class DecodeUType (dut: Decoder) extends PeekPokeTester(dut) {
@@ -91,11 +81,6 @@ class DecodeUType (dut: Decoder) extends PeekPokeTester(dut) {
 
 }
 
-class UTypeSpec extends FlatSpec with Matchers {
-  "Instruction type U test" should "pass" in {
-    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeUType(c)} should be (true)
-  }
-}
 
 
 /* R TYPE AND ALU OPCODE TEST */
@@ -152,14 +137,6 @@ class DecodeRALUTest (dut: Decoder) extends PeekPokeTester(dut) {
 
 }
 
-class DecodeRALUSpec extends FlatSpec with Matchers {
-  "R type instructions and ALU ops" should "pass" in {
-    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeRALUTest(c)} should be (true)
-  }
-}
-
-
-
 
 
 class DecodeSTypeTest (dut: Decoder) extends PeekPokeTester(dut) {
@@ -185,12 +162,6 @@ class DecodeSTypeTest (dut: Decoder) extends PeekPokeTester(dut) {
       expect(dut.out.funct3, funct3>>12)
     }
 
-}
-
-class DecodeSTypeSpec extends FlatSpec with Matchers {
-  "S type instructions" should "pass" in {
-    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeSTypeTest(c)} should be (true)
-  }
 }
 
 /* I TYPE AND ALU OPCODE TEST */
@@ -247,51 +218,24 @@ class DecodeIALUTest (dut: Decoder) extends PeekPokeTester(dut) {
 
 }
 
-class DecodeIALUSpec extends FlatSpec with Matchers {
+class DecodeSpec extends FlatSpec with Matchers {
   "I type instructions and ALU ops" should "pass" in {
     chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeIALUTest(c)} should be (true)
   }
-}
-
-
-
-
-
-
-/* WIP
-class DecodeJType (dut: Decoder) extends PeekPokeTester(dut) {
-    for(i <- 0 to 100) {
-        val r = new scala.util.Random
-      
-        val opcode = OP_JAL
-        val rd  = BigInt(r.nextInt(32) << 7)
-        val imm19to12 = BigInt(r.nextInt(2^8)) << 12 
-        val imm11 = BigInt(r.nextInt(2)) << 20
-        val imm10to1 = BigInt(r.nextInt(2^10)) << 21
-        val imm20 = BigInt(r.nextInt(2)) << 31
-      
-       
-       // val bitString = imm20 | imm10to1 | imm11 | imm19to12  | rd | opcode
-        val bitString = imm20 | imm10to1 | imm11 | imm19to12 | rd | opcode
-        //20 10:1 11 19:12
-        val imm = (imm20 | imm19to12 | imm11 | imm10to1) << 12
-        
-        poke(dut.in, bitString)
-        step(1)
-        expect(dut.out.opcode, opcode)
-        expect(dut.out.rd, rd >> 7 )
-        expect(dut.out.imm, imm >> 12)
-    
-    }
-
-}
-
-class JTypeSpec extends FlatSpec with Matchers {
-  "Instruction type J test (JAL instruction)" should "pass" in {
-    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeJType(c)} should be (true)
+  "S type instructions" should "pass" in {
+    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeSTypeTest(c)} should be (true)
+  }
+  "R type instructions and ALU ops" should "pass" in {
+    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeRALUTest(c)} should be (true)
+  }
+   "Instruction type I test" should "pass" in {
+    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeIType(c)} should be (true)
+  }
+  "Instruction type R test" should "pass" in {
+    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeRType(c)} should be (true)
+  }
+"Instruction type U test" should "pass" in {
+    chisel3.iotesters.Driver(() => new Decoder()) { c => new DecodeUType(c)} should be (true)
   }
 }
- */
 
-
- 

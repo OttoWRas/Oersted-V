@@ -5,17 +5,16 @@ import chisel3.util._
 
 class Registers extends Module {
     val io = IO(new Bundle {
-        val rdAddr1 = Input(UInt(32.W))
-        val rdAddr2  = Input(UInt(32.W))
-        val wrEnable = Input(Bool())
-        val wrData = Input(UInt(32.W))
+        val rdAddr1     = Input(UInt(32.W))
+        val rdAddr2     = Input(UInt(32.W))
+        val wrEnable    = Input(Bool())
+        val wrData      = Input(UInt(32.W))
       
-        val wrAddr   = Input(UInt(5.W))
+        val wrAddr      = Input(UInt(5.W))
 
-        val rdData1  = Output(UInt(32.W))
-        val rdData2  = Output(UInt(32.W))
-
-        val regDebug =  Output(Vec(32, UInt(32.W)))
+        val rdData1     = Output(UInt(32.W))
+        val rdData2     = Output(UInt(32.W))
+        val regDebug    = Output(Vec(32, UInt(32.W)))
     })
 
     val registerFile = Reg(Vec (32, UInt (32.W)))

@@ -19,14 +19,15 @@ class Control extends Module {
         }
     }
     
-   io.branch    := io.in(6)
-   io.memRead   := io.in(5)
-   io.memToReg  := io.in(4)
-   io.ALUOp     := io.in(3)
-   io.memWrite  := io.in(2)
-   io.ALUSrc    := io.in(1)
-   io.regWrite  := io.in(0)
-   io.nextOp    := io.in(7)
+    io.nextOp    := io.in(7)
+    io.branch    := io.in(6)
+    io.memRead   := io.in(5)
+    io.memToReg  := io.in(4)
+    io.ALUOp     := io.in(3)
+    io.memWrite  := io.in(2)
+    io.ALUSrc    := io.in(1)
+    io.regWrite  := io.in(0)
+  
 
 }
 

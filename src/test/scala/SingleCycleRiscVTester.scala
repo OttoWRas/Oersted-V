@@ -108,27 +108,3 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
 }
 
 
-/*
-   0x00200093, // addi x1 x0 2
-    0x00300113, // addi x2 x0 3
-    0x002081b3) // add x3 x1 x2
-*/
-// class RiscVSpec extends FlatSpec with Matchers {
-//   "RiscV test" should "pass" in {
-//     test(new SingleCycleRiscV).withAnnotations(Seq(WriteVcdAnnotation)) { c=>
-//         c.io.fetch.poke(true.B)
-//         c.clock.step(20)
-//         c.io.instOut.expect(4369.U)
-//         c.io.fetch.poke(false.B)
-//         c.io.pcPlus.poke(true.B)
-//         c.clock.step(1)
-//         c.io.pcPlus.poke(false.B)
-//         c.io.fetch.poke(true.B)
-//         c.clock.step(5)
-//         c.io.fetch.poke(false.B)
-//         c.clock.step(5)
-//     }
-//   }
-// }
-
-

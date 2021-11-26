@@ -23,14 +23,15 @@ class SingleCycleRiscV(program: String = "") extends Module {
   })
     //val decDebug = IO(Output(new DecodeOut))
 
-    val mem   = Module(new Memory(program))
-    val pc    = Module(new ProgramCounter)
-    val ins   = Module(new InstBuff)
-    val ctrl  = Module(new Control)
-    val reg   = Module(new Registers)
-    val dec   = Module(new Decoder)
-    val alu   = Module(new ALU)
-    val wb    = Module(new WriteBack)
+    val mem    = Module(new Memory(program))
+    val pc     = Module(new ProgramCounter)
+    val ins    = Module(new InstBuff)
+    val ctrl   = Module(new Control)
+    val reg    = Module(new Registers)
+    val dec    = Module(new Decoder)
+    val alu    = Module(new ALU)
+    val wb     = Module(new WriteBack)
+    val imm    = Module(new ImmediateGen)
 
     /* fetch / initialization */
     pc.io.flagIn    := ins.io.flagOut
@@ -59,6 +60,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
     /* decode */
     dec.io.in       := ins.io.instOut
+    imm.io.in       := ins.io.instOut
 
     /* execute */
     alu.io.opcode   := dec.io.aluOp

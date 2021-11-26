@@ -18,10 +18,6 @@ class ImmediateGen extends Module {
         new Bundle {
             val in   = Input(UInt(32.W))
             val out  = Output(SInt(32.W))   
-            val imm12     = Output(UInt(1.W))
-            val imm10to5  = Output(UInt(6.W))
-            val imm4to1     = Output(UInt(4.W))
-            val imm11 = Output(UInt(1.W))
         }
     }
     
@@ -29,11 +25,6 @@ class ImmediateGen extends Module {
     val funct3  = io.in(14,12) // for I, S and B types we need to determine MSB or zero-extends
     val immTemp = WireDefault(0.U(32.W)) // temporary immediate, this is automatically 
     io.out      := immTemp.asSInt // default assignment
-    io.imm12    := WireDefault(0.U(1.W))
-    io.imm10to5 := WireDefault(0.U(6.W))
-    io.imm4to1 := WireDefault(0.U(4.W))
-    io.imm11 := WireDefault(0.U(1.W))
-
 
     switch(opcode){
         
@@ -48,8 +39,7 @@ class ImmediateGen extends Module {
             io.out := immTemp.asSInt
         }
         is(OP_IL){ // i type LOAD, where we have to zero extend LBU and LHU
-              
-
+        
             val imm11to0 = io.in(31,20)
             immTemp := imm11to0
            
@@ -82,11 +72,6 @@ class ImmediateGen extends Module {
             when((imm12 & true.B & (funct3 =/= 6.U) & (funct3 =/= 7.U)) ){ 
                 immTemp := (imm12 ## imm11 ## imm10to5 ## imm4to1 ## 0.U(1.W)) | "hFFFFF000".U 
             }
-
-            io.imm12 := imm12
-            io.imm10to5 := imm10to5
-            io.imm4to1 := imm4to1
-            io.imm11 := imm11
 
             io.out := immTemp.asSInt
         }

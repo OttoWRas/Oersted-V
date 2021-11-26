@@ -103,28 +103,40 @@ class ImmUTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
 
 
 class ImmBTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
-   for (w <- 0 until 10) {
-    val r = new scala.util.Random
+   for (w <- 0 until 1000) {
+      val r = new scala.util.Random
 
-    val opcode   = OP_B.litValue()
-    val rs1      = BigInt(r.nextInt(32) << 15)
-    val rs2      = BigInt(r.nextInt(32) << 20)
-    val imm      = BigInt(r.nextInt(4096)) // -2048
-    val funct3s  = Array(0, 1, 4, 5) //, 6, 7 s
-    val funct3   = BigInt(funct3s(r.nextInt(4))) << 12 
-    val imm12    = (((BigInt(2048)) & imm) >> 11) << 31
-    val imm11    = (((BigInt(1024)) & imm) >> 10) << 7
-    val imm10to5 = (((BigInt(992)) & imm) >> 5) << 25
-    val imm4to1  = (((BigInt(30)) & imm) >> 1) << 8
+      val opcode     = OP_B.litValue()
+      val rs1        = BigInt(r.nextInt(32) << 15)
+      val rs2        = BigInt(r.nextInt(32) << 20)
+      val imm        = BigInt(r.nextInt(4096) - 2048) // -2048
+      val funct3s    = Array(0, 1, 4, 5) //, 6, 7 zero-extends.. 
+      val funct3     = BigInt(funct3s(r.nextInt(4))) << 12 
 
-    val immExpect = ((imm12 >> 20) | (imm11 << 3) | (imm10to5 >> 20) | (imm4to1 >> 8)) << 1
+      val mask12     = BigInt(1) << 12 
+      val mask11     = BigInt(1) << 11
+      val mask10to5  = BigInt(63) << 5
+      val mask4to1   = BigInt(15) << 1
+      
+      val imm12      = (mask12 & imm) << 19 
+      val imm11      = (mask11 & imm) >> 4
+      val imm10to5   = (mask10to5 & imm) << 20
+      val imm4to1    = (mask4to1 & imm) << 7
 
-    val bitString = imm12 | rs2 | rs1 | funct3 | imm11 | opcode
-    //val bitString = imm12 | imm10to5 | rs2 | rs1 | funct3 | imm4to1 | imm11 | opcode
-    
-    poke(dut.io.in, bitString)
-    step(1)
-    expect(dut.io.out, immExpect)
+      var immExpect = (imm12 >> 19) | (imm11 << 4) | (imm10to5 >> 20) | (imm4to1 >> 7)
+
+      if((imm12>>31) == BigInt(1)){
+         immExpect = immExpect | 0xFFFFF000
+      }
+      val bitString = imm12 | imm10to5 | rs2 | rs1 | funct3 | imm4to1 | imm11 | opcode
+
+      poke(dut.io.in, bitString)
+      step(1)
+      expect(dut.io.imm12, imm12>>31)
+      expect(dut.io.imm11, imm11>>7)
+      expect(dut.io.imm10to5, imm10to5>>25)
+      expect(dut.io.imm4to1, imm4to1>>8)
+      expect(dut.io.out, immExpect)
    }
 }
 
@@ -134,18 +146,22 @@ class ImmJTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
 
       val opcode      = OP_JAL.litValue()
       val rd          = BigInt(31) << 7 // BigInt(r.nextInt(32).toBinaryString, 2) << 7
+
+      /* generate a large pos og neg number to test */
       val imm         = BigInt(r.nextInt(1048576)- 524288) << 12// -- 524288
      
       val mask20      = BigInt(1.toBinaryString, 2) << 31
       val mask19to12  = BigInt(255.toBinaryString, 2) << 12
       val mask11      = BigInt(1.toBinaryString, 2) << 20
       val mask10to1   = BigInt(1023.toBinaryString, 2) << 21
-   
+
+      
       val imm20       = imm & mask20
       val imm10to1    = imm & mask10to1
       val imm11       = imm & mask11
       val imm19to12   = imm & mask19to12
-      
+
+      /* put the immediates together the same way as it's done in the immediate generation according to specification */
       var immExpect = ((imm20 >> 11) | (imm19to12) | imm10to1 >> 20 | imm11 >> 9)
       
       if((imm20>>31) == BigInt(1)){
@@ -155,34 +171,30 @@ class ImmJTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
 
       poke(dut.io.in, bitString)
       step(1)
-      expect(dut.io.imm20, imm20 >> 31)
-      expect(dut.io.imm19to12, imm19to12 >> 12)
-      expect(dut.io.imm10to1, imm10to1 >> 21)
-      expect(dut.io.imm11, imm11 >> 20) 
       expect(dut.io.out, immExpect)
    }
 }
 
 class ImmSpec extends FlatSpec with Matchers {
-  "I regular type immediate generation" should "pass" in {
-    chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmITypeTest(c)} should be (true)
-  }
-   "I load type imm generation" should "pass" in {
-    chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmILTypeTest(c)} should be (true)
-  }
-  "S type imm generation" should "pass" in {
-    chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmSTypeTest(c)} should be (true)
-  }
-//   "B type imm generation" should "pass" in {
-//     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmBTypeTest(c)} should be (true)
+//   "I regular type immediate generation" should "pass" in {
+//     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmITypeTest(c)} should be (true)
 //   }
+//    "I load type imm generation" should "pass" in {
+//     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmILTypeTest(c)} should be (true)
+//   }
+//   "S type imm generation" should "pass" in {
+//     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmSTypeTest(c)} should be (true)
+//   }
+  "B type imm generation" should "pass" in {
+    chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmBTypeTest(c)} should be (true)
+  }
 
-"U type imm generation" should "pass" in {
-    chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmUTypeTest(c)} should be (true)
-  }
-  "J type imm generation" should "pass" in {
-    chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmJTypeTest(c)} should be (true)
-  }
+// "U type imm generation" should "pass" in {
+//     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmUTypeTest(c)} should be (true)
+//   }
+//   "J type imm generation" should "pass" in {
+//     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmJTypeTest(c)} should be (true)
+//   }
 }
 
 /*

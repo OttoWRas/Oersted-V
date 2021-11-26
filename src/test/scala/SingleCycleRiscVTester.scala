@@ -5,6 +5,7 @@ import org.scalatest._
 import chiseltest._
 import chisel3._
 import matchers._
+import scala.util.control.Breaks._
 
 import java.nio.file.{Files, Paths}
 import java.io._
@@ -53,7 +54,10 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
   "MAIN tester" should "pass" in {
     test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/addneg.bin"))) { m=>
     val sb = new StringBuilder  
-    var pc = m.io.pcDebug.peek().litValue()
+   
+
+    for (w <- 0 to 5) {
+       var pc = m.io.pcDebug.peek().litValue()
     var ins =  m.io.instrDebug.peek().litValue()
     var op = m.io.opcodeDebug.peek().litValue()
     var rd = m.io.rdDebug.peek().litValue()
@@ -66,14 +70,13 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     var rd2 = m.io.rd2Debug.peek().litValue()
     var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
     var done = m.io.done.peek().litValue()
-
-    for (w <- 0 to 8) {
       m.clock.step(1)
        // print(f"rdAddr: $pc%x => ")
        // print(f"rdData: $ins%8x\n \n\n")
         println()
         println()
-  
+        print(f"instruction: $ins%08x")
+        println()
         print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = $aluCtrl\n\n")
         /*
         */
@@ -113,48 +116,93 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
   }
 }
 
-
-
 class R2Test extends FlatSpec with ChiselScalatestTester with Matchers {
   "MAIN tester" should "pass" in {
     test(new SingleCycleRiscV("./testData/instructions.hex.txt")) { m=>
-    var pc = m.io.pcDebug.peek().litValue()
-    var ins =  m.io.instrDebug.peek().litValue()
-    var op = m.io.opcodeDebug.peek().litValue()
-    var rd = m.io.rdDebug.peek().litValue()
-    var funct3 = m.io.funct3Debug.peek().litValue()
-    var funct7 = m.io.funct7Debug.peek().litValue()
-    var rs1 = m.io.rs1Debug.peek().litValue()
-    var rs2 = m.io.rs2Debug.peek().litValue()
-    var imm = m.io.immDebug.peek().litValue()
-    var rd1 = m.io.rd1Debug.peek().litValue()
-    var rd2 = m.io.rd2Debug.peek().litValue()
-    var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
-    var done = m.io.done.peek().litValue()
-    
-    //m.clock.step(10)
-    for(w <- 0 until 5){
+   
+      breakable { 
+        for (i <- 0 to 1000) {
+          var done = m.io.done.peek().litValue()
+          var pc = m.io.pcDebug.peek().litValue()
+          var ins =  m.io.instrDebug.peek().litValue()
+          var op = m.io.opcodeDebug.peek().litValue()
+          var rd = m.io.rdDebug.peek().litValue()
+          var funct3 = m.io.funct3Debug.peek().litValue()
+          var funct7 = m.io.funct7Debug.peek().litValue()
+          var rs1 = m.io.rs1Debug.peek().litValue()
+          var rs2 = m.io.rs2Debug.peek().litValue()
+          var imm = m.io.immDebug.peek().litValue()
+          var rd1 = m.io.rd1Debug.peek().litValue()
+          var rd2 = m.io.rd2Debug.peek().litValue()
+          var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
 
-    print(f"pc = $pc\nopcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = $aluCtrl\n\n")
-        println()
-      m.clock.step(1)
-       for(i <- 0 until 32){
-          if(i != 0 && i % 8 == 0) { print(f"\n") } 
+          m.clock.step(1)
+          println()
+          print(f"instruction: $ins%08x")
+          println()
+          print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = $aluCtrl\n\n")
+          println()
+          println()
+          /* print regs */
+          for(i <- 0 until 32){
+            if(i != 0 && i % 8 == 0) { print(f"\n") } 
+                
+            var v = m.io.regDebug(i).peek().litValue() // peek(dut.io.regDebug(i))
+            print(f"x$i%-2d ")
+            print(f"$v%08x ")
+          }
+
           
+          
+        
+        if (done == BigInt(1)) break
+        } 
+      }
+
+
+
+      
+    }
+  }
+
+}
+
+/*
+
+    for(w <- 0 until 15){
+      
+      var pc = m.io.pcDebug.peek().litValue()
+      var ins =  m.io.instrDebug.peek().litValue()
+      var op = m.io.opcodeDebug.peek().litValue()
+      var rd = m.io.rdDebug.peek().litValue()
+      var funct3 = m.io.funct3Debug.peek().litValue()
+      var funct7 = m.io.funct7Debug.peek().litValue()
+      var rs1 = m.io.rs1Debug.peek().litValue()
+      var rs2 = m.io.rs2Debug.peek().litValue()
+      var imm = m.io.immDebug.peek().litValue()
+      var rd1 = m.io.rd1Debug.peek().litValue()
+      var rd2 = m.io.rd2Debug.peek().litValue()
+      var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
+     
+      var done = m.io.done.peek().litValue()
+      if(done == BigInt(1)){
+       print("DONEONEOND")
+        
+      } else {
+        m.clock.step(1)
+      }
+    print(f"instruction: $ins%08x and PC: $pc")
+        println()
+        print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = $aluCtrl\n\n")
+        println()
+        for(i <- 0 until 32){
+    if(i != 0 && i % 8 == 0) { print(f"\n") } 
           var v = m.io.regDebug(i).peek().litValue() // peek(dut.io.regDebug(i))
           print(f"x$i%-2d ")
           print(f"$v%08x ")
-        }
-
-        println()
-        println()
-        println()
-
-      if(m.io.done.peek().litValue() == BigInt(1)){
-    
-       
-      }
     }
-    }
-  }
-}
+    println()
+        println()
+      
+      
+      */

@@ -102,6 +102,25 @@ class Decoder extends MultiIOModule {
 
 
     switch(opcode) {
+        is(OP.OP_B){
+            val B = io.in.asTypeOf(new BType)
+
+            out.funct3 := B.funct3
+            out.rs2 := B.rs2
+            out.rs1 := B.rs1
+
+            /* equality alu op*/
+            switch(B.funct3){
+                is(0.U) { io.aluOp := isCmp }
+                is(1.U) { io.aluOp := isCmpEq }
+                is(4.U) { io.aluOp := ALU_SLT}
+                is(5.U) { io.aluOp := }
+                is(6.U) { io.aluOp := }
+                is(7.U) { io.aluOp := }
+                
+            }
+            io.aluOp := 
+        }
         is(OP.OP_R){
             val R = io.in.asTypeOf(new RType)
 
@@ -135,7 +154,7 @@ class Decoder extends MultiIOModule {
             }
 
         }
-        is (OP.OP_I){
+        is (OP.OP_I, OP_IL, OP_IE, OP_JALR){
             val I = io.in.asTypeOf(new IType)
 
             out.rd      := I.rd
@@ -200,7 +219,6 @@ class Decoder extends MultiIOModule {
             val J = io.in.asTypeOf(new JType)
             
             out.rd := J.rd
-            out.imm := (J.imm20 ## J.imm19to12 ## J.imm11 ## J.imm10to1).asSInt
         }
        
     }

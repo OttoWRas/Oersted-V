@@ -43,9 +43,9 @@ class SingleCycleRiscV(program: String = "") extends Module {
     pc.io.jmpAddr   := 0.U
     pc.io.wrEnable  := false.B
     when(alu.io.cmpOut.asBool & ctrl.io.branch){
-      pc.io.wrEnable := true.B
-      pc.io.pcPlus := false.B
-      pc.io.jmpAddr := (pc.io.pcAddr + (imm.io.out<<1).asUInt)
+      pc.io.wrEnable  := true.B
+      pc.io.pcPlus    := false.B
+      pc.io.jmpAddr   := (pc.io.pcAddr + (imm.io.out<<1).asUInt)
     }
     ctrl.io.in      := ins.io.instOut(6,0)  
 
@@ -116,10 +116,9 @@ class SingleCycleRiscV(program: String = "") extends Module {
       io.regDebug(i) := reg.io.regDebug(i)
     }
     io.done := false.B
-    // io.done := false.B 
-    // when((ins.io.instOut(6,0) === OP_IE) & (reg.io.a7 === 10.U)){
-    //   io.done := true.B
-    // }
+    when((ins.io.instOut(6,0) === OP_IE) & (reg.io.x17 === 10.U)){
+      io.done := true.B
+    }
     
 }
 

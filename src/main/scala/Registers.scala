@@ -25,10 +25,10 @@ class Registers extends Module {
     when (io.wrEnable) {
         registerFile(io.wrAddr) := io.wrData
     }
-    when (!io.wrEnable) {
+    //when (!io.wrEnable) {
         io.rdData1 := registerFile(io.rdAddr1)
         io.rdData2 := registerFile(io.rdAddr2)
-    }
+    //}
 
    io.regDebug := registerFile
 }

@@ -51,7 +51,7 @@ object helperFunc {
 
 class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
   "MAIN tester" should "pass" in {
-    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/branchcnt.bin"))) { m=>
+    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/addneg.bin"))) { m=>
     val sb = new StringBuilder  
     var pc = m.io.pcDebug.peek().litValue()
     var ins =  m.io.instrDebug.peek().litValue()
@@ -65,23 +65,28 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     var rd1 = m.io.rd1Debug.peek().litValue()
     var rd2 = m.io.rd2Debug.peek().litValue()
     var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
+    var done = m.io.done.peek().litValue()
 
     for (w <- 0 to 8) {
       m.clock.step(1)
        // print(f"rdAddr: $pc%x => ")
        // print(f"rdData: $ins%8x\n \n\n")
         println()
+        println()
+  
         print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = $aluCtrl\n\n")
         /*
         */
        // print(f"decoder: " + m.io.decDebug.peek())
       
+  
   for(i <- 0 until 32){
     if(i != 0 && i % 8 == 0) { print(f"\n") } 
           var v = m.io.regDebug(i).peek().litValue() // peek(dut.io.regDebug(i))
           print(f"x$i%-2d ")
           print(f"$v%08x ")
     }
+    
   }
 
   for(i <- 0 until 32){
@@ -90,7 +95,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
           sb.append(f"$v%08x" + "\n")
   }
 
-  sb.toString should be (helperFunc.hexToString("./testData/branchcnt.res"))
+  sb.toString should be (helperFunc.hexToString("./testData/addneg.res"))
   
   
      
@@ -103,8 +108,53 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     // }
 
     println(" ")
+
     }
   }
 }
 
 
+
+class R2Test extends FlatSpec with ChiselScalatestTester with Matchers {
+  "MAIN tester" should "pass" in {
+    test(new SingleCycleRiscV("./testData/instructions.hex.txt")) { m=>
+    var pc = m.io.pcDebug.peek().litValue()
+    var ins =  m.io.instrDebug.peek().litValue()
+    var op = m.io.opcodeDebug.peek().litValue()
+    var rd = m.io.rdDebug.peek().litValue()
+    var funct3 = m.io.funct3Debug.peek().litValue()
+    var funct7 = m.io.funct7Debug.peek().litValue()
+    var rs1 = m.io.rs1Debug.peek().litValue()
+    var rs2 = m.io.rs2Debug.peek().litValue()
+    var imm = m.io.immDebug.peek().litValue()
+    var rd1 = m.io.rd1Debug.peek().litValue()
+    var rd2 = m.io.rd2Debug.peek().litValue()
+    var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
+    var done = m.io.done.peek().litValue()
+    
+    //m.clock.step(10)
+    for(w <- 0 until 5){
+
+    print(f"pc = $pc\nopcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = $aluCtrl\n\n")
+        println()
+      m.clock.step(1)
+       for(i <- 0 until 32){
+          if(i != 0 && i % 8 == 0) { print(f"\n") } 
+          
+          var v = m.io.regDebug(i).peek().litValue() // peek(dut.io.regDebug(i))
+          print(f"x$i%-2d ")
+          print(f"$v%08x ")
+        }
+
+        println()
+        println()
+        println()
+
+      if(m.io.done.peek().litValue() == BigInt(1)){
+    
+       
+      }
+    }
+    }
+  }
+}

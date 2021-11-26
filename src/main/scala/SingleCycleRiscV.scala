@@ -2,6 +2,7 @@ package core
 
 import chisel3._
 import chisel3.util._
+import OP._
 
 class SingleCycleRiscV(program: String = "") extends Module {
   val io = IO(new Bundle {
@@ -19,9 +20,10 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val aLUSrcDebug      = Output(Bool())
     val funct7Debug      = Output(UInt(7.W))
     val immDebug         = Output(SInt(32.W))
-   // val done        = Output(Bool())
+    val done        = Output(Bool())
   })
     //val decDebug = IO(Output(new DecodeOut))
+    
 
     val mem    = Module(new Memory(program))
     val pc     = Module(new ProgramCounter)
@@ -46,8 +48,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
       pc.io.jmpAddr := (pc.io.pcAddr + (imm.io.out<<1).asUInt)
     }
     ctrl.io.in      := ins.io.instOut(6,0)  
-    
-    
+
     ins.io.flagIn   := pc.io.flagOut
     ins.io.instIn   := mem.io.rdData
 
@@ -110,10 +111,15 @@ class SingleCycleRiscV(program: String = "") extends Module {
     io.immDebug := dec.out.imm
 
    // io.regDebug := reg.io.debugOut
-
+  
     for(i <- 0 to 31){
       io.regDebug(i) := reg.io.regDebug(i)
     }
+    io.done := false.B
+    // io.done := false.B 
+    // when((ins.io.instOut(6,0) === OP_IE) & (reg.io.a7 === 10.U)){
+    //   io.done := true.B
+    // }
     
 }
 
@@ -121,3 +127,14 @@ class SingleCycleRiscV(program: String = "") extends Module {
 object CPU extends App {
   (new chisel3.stage.ChiselStage).emitVerilog(new SingleCycleRiscV)
 }
+
+/*
+00150513
+feb51ee3
+feb548e3
+fea5c6e3
+00050613
+00a00893
+00000073
+
+*/

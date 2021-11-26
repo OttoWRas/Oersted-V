@@ -111,15 +111,14 @@ class Decoder extends MultiIOModule {
 
             /* equality alu op*/
             switch(B.funct3){
-                is(0.U) { io.aluOp := isCmp }
-                is(1.U) { io.aluOp := isCmpEq }
-                is(4.U) { io.aluOp := ALU_SLT}
-                is(5.U) { io.aluOp := }
-                is(6.U) { io.aluOp := }
-                is(7.U) { io.aluOp := }
+                is(0.U) { io.aluOp := ALU_SEQ }
+                is(1.U) { io.aluOp := ALU_SNE }
+                is(4.U) { io.aluOp := ALU_SLT }
+                is(5.U) { io.aluOp := ALU_SGE }
+                is(6.U) { io.aluOp := ALU_SLTU }
+                is(7.U) { io.aluOp := ALU_SGEU }
                 
             }
-            io.aluOp := 
         }
         is(OP.OP_R){
             val R = io.in.asTypeOf(new RType)

@@ -119,9 +119,9 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
 class R2Test extends FlatSpec with ChiselScalatestTester with Matchers {
   "MAIN tester" should "pass" in {
     test(new SingleCycleRiscV("./testData/instructions.hex.txt")) { m=>
-   
+    
       breakable { 
-        for (i <- 0 to 1000) {
+        for (i <- 0 to 20) {
           var done = m.io.done.peek().litValue()
           var pc = m.io.pcDebug.peek().litValue()
           var ins =  m.io.instrDebug.peek().litValue()
@@ -138,10 +138,10 @@ class R2Test extends FlatSpec with ChiselScalatestTester with Matchers {
 
           m.clock.step(1)
           println()
-          print(f"instruction: $ins%08x")
+          print("\n-----------------------------------\n")
+          print(f"instruction: $ins%08x and PC = $pc")
           println()
           print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = $aluCtrl\n\n")
-          println()
           println()
           /* print regs */
           for(i <- 0 until 32){
@@ -152,8 +152,10 @@ class R2Test extends FlatSpec with ChiselScalatestTester with Matchers {
             print(f"$v%08x ")
           }
 
-          
-          
+          print("\n-----------------------------------\n")
+          println()
+          println()
+          println()
         
         if (done == BigInt(1)) break
         } 

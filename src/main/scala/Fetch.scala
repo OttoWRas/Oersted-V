@@ -6,15 +6,15 @@ import chisel3.util._
 class ProgramCounter extends Module {
     val io = IO(new Bundle {
             val pcPlus   = Input(Bool())
-            val jmpAddr  = Input(UInt(32.W)) // x
+            val jmpAddr  = Input(SInt(32.W)) // x
             val wrEnable = Input(Bool())
             val flagIn   = Input(Bool())
 
             val flagOut  = Output(Bool()) // x
-            val pcAddr   = Output(UInt(32.W))
+            val pcAddr   = Output(SInt(32.W))
     })
 
-    val pc = RegInit(0.U(32.W))
+    val pc = RegInit(0.S(32.W))
     val flag = RegInit(true.B)
 
     when (io.wrEnable) {
@@ -23,7 +23,7 @@ class ProgramCounter extends Module {
     }
 
     when (io.pcPlus) {
-        pc := pc + 4.U
+        pc := pc + 4.S
         flag := true.B 
     }
 

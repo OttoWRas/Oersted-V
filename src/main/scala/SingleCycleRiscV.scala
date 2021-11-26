@@ -7,7 +7,7 @@ import OP._
 class SingleCycleRiscV(program: String = "") extends Module {
   val io = IO(new Bundle {
     val regDebug    = Output(Vec(32, UInt(32.W))) // debug output for the tester
-    val pcDebug     = Output(UInt(32.W))
+    val pcDebug     = Output(SInt(32.W))
     val instrDebug  = Output(UInt(32.W))
     
     val opcodeDebug      = Output(UInt(7.W))
@@ -40,12 +40,12 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
     /* branching logics */
     pc.io.pcPlus    := true.B
-    pc.io.jmpAddr   := 0.U
+    pc.io.jmpAddr   := 0.S
     pc.io.wrEnable  := false.B
     when(alu.io.cmpOut.asBool & ctrl.io.branch){
       pc.io.wrEnable  := true.B
       pc.io.pcPlus    := false.B
-      pc.io.jmpAddr   := (pc.io.pcAddr + (imm.io.out<<1).asUInt)
+      pc.io.jmpAddr   := (pc.io.pcAddr + imm.io.out)
     }
     ctrl.io.in      := ins.io.instOut(6,0)  
 
@@ -55,7 +55,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     mem.io.wrEnable := ctrl.io.memWrite
     mem.io.wrData   := reg.io.rdData2
     mem.io.wrAddr   := alu.io.out
-    mem.io.rdAddr   := pc.io.pcAddr>>2 /* divide by four so we read addresses 1,2,3,4 instead of 0, 4, 8 etc */
+    mem.io.rdAddr   := (pc.io.pcAddr>>2).asUInt /* divide by four so we read addresses 1,2,3,4 instead of 0, 4, 8 etc */
 
     reg.io.wrEnable := ctrl.io.regWrite
     reg.io.wrData   := wb.io.wrBack 
@@ -75,7 +75,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     alu.io.data1    := reg.io.rdData1
     alu.io.data2    := WireDefault(0.U)
     /* ctrl.io.out.ALUSrc? */
-    when(ctrl.io.ALUSrc){ //dec.out.imm =/= 0.S
+    when(ctrl.io.ALUSrc){ 
       alu.io.data2 := imm.io.out.asUInt // needs immediate handling
     }.otherwise {
       alu.io.data2 := reg.io.rdData2 
@@ -98,7 +98,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
   
 
     /* debugging outputs */
-    io.pcDebug := pc.io.pcAddr>>2
+    io.pcDebug := pc.io.pcAddr
     io.instrDebug := ins.io.instOut // mem.io.rdData //instr.io.instOut
 
 
@@ -108,7 +108,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     io.rs1Debug := dec.out.rs1
     io.rs2Debug := dec.out.rs2
     io.funct7Debug := dec.out.funct7
-    io.immDebug := dec.out.imm
+    io.immDebug := imm.io.out
 
    // io.regDebug := reg.io.debugOut
   

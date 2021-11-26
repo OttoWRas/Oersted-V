@@ -33,8 +33,8 @@ class ControlTester(dut: Control) extends PeekPokeTester(dut) {
 }
 }
 
-class ControllerSpec extends FlatSpec with Matchers {
-  "Control unit test" should "pass" in {
-    chisel3.iotesters.Driver(() => new Control()) { c => new ControlTester(c)} should be (true)
-  }
-}
+// class ControllerSpec extends FlatSpec with Matchers {
+//   "Control unit test" should "pass" in {
+//     chisel3.iotesters.Driver(() => new Control()) { c => new ControlTester(c)} should be (true)
+//   }
+// }

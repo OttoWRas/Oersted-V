@@ -35,9 +35,18 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
     /* fetch / initialization */
     pc.io.flagIn    := ins.io.flagOut
+
+    /* branching logics */
     pc.io.pcPlus    := true.B
     pc.io.jmpAddr   := 0.U
     pc.io.wrEnable  := false.B
+    when(alu.io.cmpOut.asBool & ctrl.io.branch){
+      pc.io.wrEnable := true.B
+      pc.io.pcPlus := false.B
+      pc.io.jmpAddr := (pc.io.pcAddr + (imm.io.out<<1).asUInt)
+    }
+    ctrl.io.in      := ins.io.instOut(6,0)  
+    
     
     ins.io.flagIn   := pc.io.flagOut
     ins.io.instIn   := mem.io.rdData
@@ -46,8 +55,6 @@ class SingleCycleRiscV(program: String = "") extends Module {
     mem.io.wrData   := reg.io.rdData2
     mem.io.wrAddr   := alu.io.out
     mem.io.rdAddr   := pc.io.pcAddr>>2 /* divide by four so we read addresses 1,2,3,4 instead of 0, 4, 8 etc */
-
-    ctrl.io.in      := ins.io.instOut
 
     reg.io.wrEnable := ctrl.io.regWrite
     reg.io.wrData   := wb.io.wrBack 
@@ -66,8 +73,9 @@ class SingleCycleRiscV(program: String = "") extends Module {
     alu.io.opcode   := dec.io.aluOp
     alu.io.data1    := reg.io.rdData1
     alu.io.data2    := WireDefault(0.U)
-    when(dec.out.imm =/= 0.S){
-      alu.io.data2 := dec.out.imm.asUInt // needs immediate handling
+    /* ctrl.io.out.ALUSrc? */
+    when(ctrl.io.ALUSrc){ //dec.out.imm =/= 0.S
+      alu.io.data2 := imm.io.out.asUInt // needs immediate handling
     }.otherwise {
       alu.io.data2 := reg.io.rdData2 
     }
@@ -77,7 +85,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     /* write back */
     wb.io.memData   := mem.io.rdData 
     wb.io.aluData   := alu.io.out
-    wb.io.memToReg    := ~ctrl.io.memToReg
+    wb.io.memToReg    := ctrl.io.memToReg //~
     wb.io.wrEnable  := true.B //ctrl.io.memToReg
     // //wb.io.wrEnable  := false.B 
     // when(ctrl.io.memToReg){
@@ -86,6 +94,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     //   wb.io.wrEnable := false.B 
     // }
 
+  
 
     /* debugging outputs */
     io.pcDebug := pc.io.pcAddr>>2
@@ -103,9 +112,9 @@ class SingleCycleRiscV(program: String = "") extends Module {
    // io.regDebug := reg.io.debugOut
 
     for(i <- 0 to 31){
-
       io.regDebug(i) := reg.io.regDebug(i)
     }
+    
 }
 
 

@@ -14,6 +14,9 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val funct3Debug      = Output(UInt(3.W))
     val rs1Debug         = Output(UInt(5.W))
     val rs2Debug         = Output(UInt(5.W))
+    val rd1Debug         = Output(UInt(32.W))
+    val rd2Debug         = Output(UInt(32.W))
+    val aLUSrcDebug      = Output(Bool())
     val funct7Debug      = Output(UInt(7.W))
     val immDebug         = Output(SInt(32.W))
    // val done        = Output(Bool())
@@ -51,6 +54,9 @@ class SingleCycleRiscV(program: String = "") extends Module {
     reg.io.rdAddr1  := dec.out.rs1
     reg.io.rdAddr2  := dec.out.rs2
 
+    io.rd1Debug := reg.io.rdData1
+    io.rd2Debug := reg.io.rdData2
+
     /* decode */
     dec.io.in       := ins.io.instOut
 
@@ -58,11 +64,13 @@ class SingleCycleRiscV(program: String = "") extends Module {
     alu.io.opcode   := dec.io.aluOp
     alu.io.data1    := reg.io.rdData1
     alu.io.data2    := WireDefault(0.U)
-    when(ctrl.io.ALUSrc){
+    when(dec.out.imm =/= 0.S){
       alu.io.data2 := dec.out.imm.asUInt // needs immediate handling
     }.otherwise {
       alu.io.data2 := reg.io.rdData2 
     }
+
+    io.aLUSrcDebug := ctrl.io.ALUSrc
     
     /* write back */
     wb.io.memData   := mem.io.rdData 
@@ -98,7 +106,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     }
 }
 
+
 object CPU extends App {
   (new chisel3.stage.ChiselStage).emitVerilog(new SingleCycleRiscV)
 }
-

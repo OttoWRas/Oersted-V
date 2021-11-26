@@ -79,7 +79,7 @@ class ImmediateGen extends Module {
 
             /* notice the extra 0 added as LSB. branch instructions will only branch to multiples of 16 bits, ie. no uneven numbers */
             immTemp := imm12 ## imm11 ## imm10to5 ## imm4to1 ## 0.U(1.W) // ## 0.U(1.W) 
-            when((imm12 & true.B) ){ // & (funct3 =/= 6.U) & (funct3 =/= 7.U)
+            when((imm12 & true.B & (funct3 =/= 6.U) & (funct3 =/= 7.U)) ){ 
                 immTemp := (imm12 ## imm11 ## imm10to5 ## imm4to1 ## 0.U(1.W)) | "hFFFFF000".U 
             }
 

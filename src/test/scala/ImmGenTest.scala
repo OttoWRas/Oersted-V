@@ -109,9 +109,14 @@ class ImmBTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
       val opcode     = OP_B.litValue()
       val rs1        = BigInt(r.nextInt(32) << 15)
       val rs2        = BigInt(r.nextInt(32) << 20)
-      val imm        = BigInt(r.nextInt(4096) - 2048) // -2048
-      val funct3s    = Array(0, 1, 4, 5) //, 6, 7 zero-extends.. 
-      val funct3     = BigInt(funct3s(r.nextInt(4))) << 12 
+      var imm        = BigInt(r.nextInt(4096) - 2048) // -2048
+      val funct3s    = Array(0, 1, 4, 5, 6, 7) //, 6, 7 zero-extends.. 
+      val funct3     = BigInt(funct3s(r.nextInt(6))) << 12 
+
+      /* if funct3 == 6 or 7, then it's unsigned, ie. zero extending. so we make sure our number is positive */
+      if(((funct3 >> 12) == BigInt(6)) | ((funct3>>12) == BigInt(7))) {
+         imm = imm + 2048
+      }
 
       val mask12     = BigInt(1) << 12 
       val mask11     = BigInt(1) << 11
@@ -125,9 +130,13 @@ class ImmBTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
 
       var immExpect = (imm12 >> 19) | (imm11 << 4) | (imm10to5 >> 20) | (imm4to1 >> 7)
 
-      if((imm12>>31) == BigInt(1)){
+      // sign extend if MSB is 1 and only if it's not BLTU og BGEU instructions
+      if(((imm12>>31) == BigInt(1)) & ((funct3 >> 12) != BigInt(6)) & ((funct3>>12) != BigInt(7))){
          immExpect = immExpect | 0xFFFFF000
       }
+      
+      
+  
       val bitString = imm12 | imm10to5 | rs2 | rs1 | funct3 | imm4to1 | imm11 | opcode
 
       poke(dut.io.in, bitString)
@@ -176,66 +185,23 @@ class ImmJTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
 }
 
 class ImmSpec extends FlatSpec with Matchers {
-//   "I regular type immediate generation" should "pass" in {
-//     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmITypeTest(c)} should be (true)
-//   }
-//    "I load type imm generation" should "pass" in {
-//     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmILTypeTest(c)} should be (true)
-//   }
-//   "S type imm generation" should "pass" in {
-//     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmSTypeTest(c)} should be (true)
-//   }
+  "I regular type immediate generation" should "pass" in {
+    chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmITypeTest(c)} should be (true)
+  }
+   "I load type imm generation" should "pass" in {
+    chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmILTypeTest(c)} should be (true)
+  }
+  "S type imm generation" should "pass" in {
+    chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmSTypeTest(c)} should be (true)
+  }
   "B type imm generation" should "pass" in {
     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmBTypeTest(c)} should be (true)
   }
 
-// "U type imm generation" should "pass" in {
-//     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmUTypeTest(c)} should be (true)
-//   }
-//   "J type imm generation" should "pass" in {
-//     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmJTypeTest(c)} should be (true)
-//   }
+"U type imm generation" should "pass" in {
+    chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmUTypeTest(c)} should be (true)
+  }
+  "J type imm generation" should "pass" in {
+    chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmJTypeTest(c)} should be (true)
+  }
 }
-
-/*
-val r = new scala.util.Random
-
-val opcode = OP.OP_I // convert this to binary like below...
-
-val rd  = r.nextInt(32).toBinaryString
-val rs1 = r.nextInt(32).toBinaryString
-val rs2 = r.nextInt(32).toBinaryString
-
-val funct3 = 7.toBinaryString // or in binary string directly like:
-val funct7 = "0100000"
-
-// Concatenate the strings (prepending "b" and convert to Chisel UInt)
-val bitString = ("b" + funct7 + funct3 + rs2 + rs1 + rd + opcode).U
-*/
-
-/*
- val rd          = BigInt(r.nextInt(32).toBinaryString, 2) << 7
-      val imm         = (BigInt(r.nextInt(1048576).toBinaryString, 2)) //1048576 -- 524288
-
-      val mask20      = BigInt((1).toBinaryString, 2) << 19
-      val mask19to12  = BigInt((255<< 11).toBinaryString, 2)
-      val mask11      = BigInt((1 << 10).toBinaryString, 2)
-      val mask10to1   = BigInt((1023).toBinaryString, 2) << 1
-   
-      val imm20       = ((imm & mask20) >> 19) << 31 
-      val imm10to1    = (imm & mask10to1) << 20
-      val imm11       = ((imm & mask11) >> 10) << 19
-      val imm19to12   = (imm & mask19to12) 
-
-  
-    val bitString =  imm20 | imm10to1 | imm11 | imm19to12 | rd | opcode
-
-    poke(dut.io.in, bitString)
-    step(1)
-    expect(dut.io.imm20, imm20 >> 31)
-    expect(dut.io.imm10to1, imm10to1 >> 21)
-    expect(dut.io.imm11, imm11 >> 19)
-   expect(dut.io.out, imm << 1)
-   }
-}
-*/

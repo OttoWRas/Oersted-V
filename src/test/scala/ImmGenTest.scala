@@ -81,6 +81,27 @@ class ImmSTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
    }
 }
 
+
+class ImmUTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
+   for (w <- 0 to 1000) {
+    val r = new scala.util.Random
+
+    val opcodes = Array(OP_LUI.litValue(), OP_AUIPC.litValue)
+    val opcode = opcodes(r.nextInt(2))
+ 
+    val rd          = BigInt(r.nextInt(32) << 7)
+    val imm       = BigInt(r.nextInt(524288) - 262144) << 12
+
+    val bitString =  imm | rd | opcode
+    
+    poke(dut.io.in, bitString)
+    step(1)
+    expect(dut.io.out, imm>>12)
+   }
+}
+
+
+
 class ImmBTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
    for (w <- 0 until 10) {
     val r = new scala.util.Random
@@ -106,23 +127,42 @@ class ImmBTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
     expect(dut.io.out, immExpect)
    }
 }
-class ImmUTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
+
+class ImmJTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
    for (w <- 0 to 1000) {
-    val r = new scala.util.Random
+      val r = new scala.util.Random
 
-    val opcodes = Array(OP_LUI.litValue(), OP_AUIPC.litValue)
-    val opcode = opcodes(r.nextInt(2))
- 
-    val rd          = BigInt(r.nextInt(32) << 7)
-    val imm       = BigInt(r.nextInt(524288) - 262144) << 12
+      val opcode      = OP_JAL.litValue()
+      val rd          = BigInt(31) << 7 // BigInt(r.nextInt(32).toBinaryString, 2) << 7
+      val imm         = BigInt(r.nextInt(1048576)- 524288) << 12// -- 524288
+     
+      val mask20      = BigInt(1.toBinaryString, 2) << 31
+      val mask19to12  = BigInt(255.toBinaryString, 2) << 12
+      val mask11      = BigInt(1.toBinaryString, 2) << 20
+      val mask10to1   = BigInt(1023.toBinaryString, 2) << 21
+   
+      val imm20       = imm & mask20
+      val imm10to1    = imm & mask10to1
+      val imm11       = imm & mask11
+      val imm19to12   = imm & mask19to12
+      
+      var immExpect = ((imm20 >> 11) | (imm19to12) | imm10to1 >> 20 | imm11 >> 9)
+      
+      if((imm20>>31) == BigInt(1)){
+         immExpect = immExpect | 0xFFF00000
+      }
+      val bitString =  imm20 | imm10to1 | imm11 | imm19to12 | rd | opcode
 
-    val bitString =  imm | rd | opcode
-    
-    poke(dut.io.in, bitString)
-    step(1)
-    expect(dut.io.out, imm>>12)
+      poke(dut.io.in, bitString)
+      step(1)
+      expect(dut.io.imm20, imm20 >> 31)
+      expect(dut.io.imm19to12, imm19to12 >> 12)
+      expect(dut.io.imm10to1, imm10to1 >> 21)
+      expect(dut.io.imm11, imm11 >> 20) 
+      expect(dut.io.out, immExpect)
    }
 }
+
 class ImmSpec extends FlatSpec with Matchers {
   "I regular type immediate generation" should "pass" in {
     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmITypeTest(c)} should be (true)
@@ -140,6 +180,9 @@ class ImmSpec extends FlatSpec with Matchers {
 "U type imm generation" should "pass" in {
     chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmUTypeTest(c)} should be (true)
   }
+  "J type imm generation" should "pass" in {
+    chisel3.iotesters.Driver(() => new ImmediateGen()) { c => new ImmJTypeTest(c)} should be (true)
+  }
 }
 
 /*
@@ -156,4 +199,31 @@ val funct7 = "0100000"
 
 // Concatenate the strings (prepending "b" and convert to Chisel UInt)
 val bitString = ("b" + funct7 + funct3 + rs2 + rs1 + rd + opcode).U
+*/
+
+/*
+ val rd          = BigInt(r.nextInt(32).toBinaryString, 2) << 7
+      val imm         = (BigInt(r.nextInt(1048576).toBinaryString, 2)) //1048576 -- 524288
+
+      val mask20      = BigInt((1).toBinaryString, 2) << 19
+      val mask19to12  = BigInt((255<< 11).toBinaryString, 2)
+      val mask11      = BigInt((1 << 10).toBinaryString, 2)
+      val mask10to1   = BigInt((1023).toBinaryString, 2) << 1
+   
+      val imm20       = ((imm & mask20) >> 19) << 31 
+      val imm10to1    = (imm & mask10to1) << 20
+      val imm11       = ((imm & mask11) >> 10) << 19
+      val imm19to12   = (imm & mask19to12) 
+
+  
+    val bitString =  imm20 | imm10to1 | imm11 | imm19to12 | rd | opcode
+
+    poke(dut.io.in, bitString)
+    step(1)
+    expect(dut.io.imm20, imm20 >> 31)
+    expect(dut.io.imm10to1, imm10to1 >> 21)
+    expect(dut.io.imm11, imm11 >> 19)
+   expect(dut.io.out, imm << 1)
+   }
+}
 */

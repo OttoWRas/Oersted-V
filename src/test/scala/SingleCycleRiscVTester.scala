@@ -55,7 +55,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task1/addlarge.bin"))) { m=>
     val sb = new StringBuilder  
    
-
+  breakable  {
     for (w <- 0 to 10) {
        var pc = m.io.pcDebug.peek().litValue()
     var ins =  m.io.instrDebug.peek().litValue()
@@ -70,7 +70,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     var rd2 = m.io.rd2Debug.peek().litValue()
     var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
     var done = m.io.done.peek().litValue()
-      m.clock.step(1)
+     
      
         println()
         println()
@@ -85,7 +85,9 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
           print(f"x$i%-2d ")
           print(f"$v%08x ")
     }
-    
+      m.clock.step(1)
+        if (done == BigInt(1)) break
+        } 
   }
 
   for(i <- 0 until 32){

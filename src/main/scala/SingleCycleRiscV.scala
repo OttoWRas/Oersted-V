@@ -46,8 +46,10 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
     /* fetch / initialization */
     pc.io.flagIn    := ins.io.flagOut
+    ins.io.flagIn   := pc.io.flagOut
 
     /* branching logics */
+
     pc.io.pcPlus    := true.B
     pc.io.jmpAddr   := 0.S
     pc.io.wrEnable  := false.B
@@ -55,12 +57,12 @@ class SingleCycleRiscV(program: String = "") extends Module {
       pc.io.pcPlus    := false.B
       pc.io.wrEnable  := true.B
       pc.io.jmpAddr   := (pc.io.pcAddr + imm.io.out)
-      //ins.io.flagIn   := true.B
-      pc.io.flagIn := true.B
+     // ins.io.flagIn   := false.B
+      //pc.io.flagIn := false.B
     }
     ctrl.io.in      := ins.io.instOut(6,0)  
 
-    ins.io.flagIn   := pc.io.flagOut
+  
     ins.io.instIn   := mem.io.rdData
 
     mem.io.wrEnable := ctrl.io.memWrite

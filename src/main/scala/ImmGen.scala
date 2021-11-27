@@ -84,7 +84,7 @@ class ImmediateGen extends Module {
                 immTemp := imm | "hFFF00000".U 
             }
 
-            io.out := immTemp.asSInt
+            io.out := (immTemp<<12).asSInt
         }
         
         /* J type */

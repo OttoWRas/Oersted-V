@@ -52,11 +52,12 @@ object helperFunc {
 
 class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
   "MAIN tester" should "pass" in {
-    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task1/shift2.bin"))) { m=>
+    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task2/branchcnt.bin"))) { m=>
     val sb = new StringBuilder  
    
   breakable  {
-    for (w <- 0 to 100) {
+    for (w <- 0 to 10) {
+      
        var pc = m.io.pcDebug.peek().litValue()
     var ins =  m.io.instrDebug.peek().litValue()
     var op = m.io.opcodeDebug.peek().litValue()
@@ -70,11 +71,14 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     var rd2 = m.io.rd2Debug.peek().litValue()
     var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
     var done = m.io.done.peek().litValue()
-     
+    
+    var pcJmpAddr = m.io.pcJmpAddrDebug.peek().litValue()
+    var ctrlBranch = m.io.ctrlBranchDebug.peek().litValue()
+
      
         println()
         println()
-        print(f"instruction: $ins%08x")
+        print(f"instruction: $ins%08x at $pc - jmpaddr: $pcJmpAddr and ctrlBranch = $ctrlBranch")
         println()
         print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = $aluCtrl\n\n")
       
@@ -96,7 +100,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
           sb.append(f"$v%08x" + "\n")
   }
 
-  sb.toString should be (helperFunc.hexToString("./testData/task1/shift2.res"))
+  sb.toString should be (helperFunc.hexToString("./testData/task2/branchcnt.res"))
   
 
     println(" ")

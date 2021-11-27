@@ -173,7 +173,7 @@ class Decoder extends MultiIOModule {
             val U = io.in.asTypeOf(new UType)
             
             out.rd := U.rd
-            out.imm := U.imm31to12.asSInt
+            out.imm := U.imm31to12.asSInt << 12
         }
 
         is(OP.OP_S){

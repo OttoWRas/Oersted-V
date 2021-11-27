@@ -75,7 +75,7 @@ class DecodeUType (dut: Decoder) extends PeekPokeTester(dut) {
         step(1)
         expect(dut.out.opcode, opcode)
         expect(dut.out.rd, rd >> 7 )
-        expect(dut.out.imm, imm >> 12)
+        expect(dut.out.imm, imm)
     
     }
 

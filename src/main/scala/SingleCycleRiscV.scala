@@ -10,6 +10,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val pcDebug     = Output(SInt(32.W))
     val instrDebug  = Output(UInt(32.W))
     
+    /* decoder debug */
     val opcodeDebug      = Output(UInt(7.W))
     val rdDebug          = Output(UInt(5.W))
     val funct3Debug      = Output(UInt(3.W))
@@ -20,7 +21,15 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val aLUSrcDebug      = Output(Bool())
     val funct7Debug      = Output(UInt(7.W))
     val immDebug         = Output(SInt(32.W))
-    val done        = Output(Bool())
+
+  /* alu debug */
+    val aluOutDebug     = Output(UInt(32.W))
+    val aluCmpOutDebug  = Output(Bool())
+
+    val pcJmpAddrDebug = Output(SInt(32.W))
+
+    val ctrlBranchDebug = Output(Bool())
+    val done              = Output(Bool())
   })
     //val decDebug = IO(Output(new DecodeOut))
     
@@ -43,8 +52,9 @@ class SingleCycleRiscV(program: String = "") extends Module {
     pc.io.jmpAddr   := 0.S
     pc.io.wrEnable  := false.B
     when(alu.io.cmpOut.asBool & ctrl.io.branch){
-      pc.io.wrEnable  := true.B
       pc.io.pcPlus    := false.B
+      pc.io.wrEnable  := true.B
+      
       pc.io.jmpAddr   := (pc.io.pcAddr + imm.io.out)
     }
     ctrl.io.in      := ins.io.instOut(6,0)  
@@ -101,7 +111,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     io.pcDebug := pc.io.pcAddr
     io.instrDebug := ins.io.instOut // mem.io.rdData //instr.io.instOut
 
-
+  /* decode debug */
     io.opcodeDebug := dec.out.opcode
     io.rdDebug := dec.out.rd
     io.funct3Debug := dec.out.funct3
@@ -109,7 +119,14 @@ class SingleCycleRiscV(program: String = "") extends Module {
     io.rs2Debug := dec.out.rs2
     io.funct7Debug := dec.out.funct7
     io.immDebug := imm.io.out
+    
+    /* alu debug */
+    io.aluCmpOutDebug := alu.io.cmpOut
+    io.aluOutDebug := alu.io.out
 
+    io.pcJmpAddrDebug := (pc.io.pcAddr + imm.io.out)
+
+    io.ctrlBranchDebug := ctrl.io.branch
    // io.regDebug := reg.io.debugOut
   
     for(i <- 0 to 31){

@@ -55,6 +55,8 @@ class SingleCycleRiscV(program: String = "") extends Module {
       pc.io.pcPlus    := false.B
       pc.io.wrEnable  := true.B
       pc.io.jmpAddr   := (pc.io.pcAddr + imm.io.out)
+      //ins.io.flagIn   := true.B
+      pc.io.flagIn := true.B
     }
     ctrl.io.in      := ins.io.instOut(6,0)  
 

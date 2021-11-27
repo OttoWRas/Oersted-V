@@ -85,7 +85,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     alu.io.data1    := reg.io.rdData1
     alu.io.data2    := WireDefault(0.U)
     /* ctrl.io.out.ALUSrc? */
-    when(ctrl.io.ALUSrc){ 
+    when(ctrl.io.ALUSrc){ //ctrl.io.ALUSrc
       alu.io.data2 := imm.io.out.asUInt // needs immediate handling
     }.otherwise {
       alu.io.data2 := reg.io.rdData2 

@@ -122,6 +122,7 @@ class R2Test extends FlatSpec with ChiselScalatestTester with Matchers {
     
       breakable { 
         for (i <- 0 to 20) {
+          
           var done = m.io.done.peek().litValue()
           var pc = m.io.pcDebug.peek().litValue()
           var ins =  m.io.instrDebug.peek().litValue()
@@ -135,11 +136,16 @@ class R2Test extends FlatSpec with ChiselScalatestTester with Matchers {
           var rd1 = m.io.rd1Debug.peek().litValue()
           var rd2 = m.io.rd2Debug.peek().litValue()
           var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
+          var jmpAddr = m.io.pcJmpAddrDebug.peek().litValue()
+          var aluOut = m.io.aluOutDebug.peek().litValue()
+          var aluCmpOut = m.io.aluCmpOutDebug.peek().litValue()
 
-          m.clock.step(1)
+          
           println()
           print("\n-----------------------------------\n")
-          print(f"instruction: $ins%08x and PC = $pc")
+          print(f"instruction: $ins%08x and PC = $pc & jmpAddr = $jmpAddr")
+          println()
+          print(f"aluOut = $aluOut | aluCmpOut = $aluCmpOut")
           println()
           print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = $aluCtrl\n\n")
           println()
@@ -156,7 +162,7 @@ class R2Test extends FlatSpec with ChiselScalatestTester with Matchers {
           println()
           println()
           println()
-        
+        m.clock.step(1)
         if (done == BigInt(1)) break
         } 
       }

@@ -54,7 +54,6 @@ class SingleCycleRiscV(program: String = "") extends Module {
     when(alu.io.cmpOut.asBool & ctrl.io.branch){
       pc.io.pcPlus    := false.B
       pc.io.wrEnable  := true.B
-      
       pc.io.jmpAddr   := (pc.io.pcAddr + imm.io.out)
     }
     ctrl.io.in      := ins.io.instOut(6,0)  
@@ -77,17 +76,16 @@ class SingleCycleRiscV(program: String = "") extends Module {
     io.rd2Debug := reg.io.rdData2
 
     /* decode */
-   dec.io.in       := ins.io.instOut
+    dec.io.in       := ins.io.instOut
     imm.io.in       := ins.io.instOut
-
 
     /* execute */
     alu.io.opcode   := dec.io.aluOp
     alu.io.data1    := reg.io.rdData1
     alu.io.data2    := WireDefault(0.U)
-    /* ctrl.io.out.ALUSrc? */
-    when(ctrl.io.ALUSrc){ //ctrl.io.ALUSrc
-      alu.io.data2 := imm.io.out.asUInt // // dec.out.imm.asUInt // imm.io.out.asUInt // needs immediate handling
+    
+    when(ctrl.io.ALUSrc){ 
+      alu.io.data2 := imm.io.out.asUInt
     }.otherwise {
       alu.io.data2 := reg.io.rdData2 
     }
@@ -97,8 +95,8 @@ class SingleCycleRiscV(program: String = "") extends Module {
     /* write back */
     wb.io.memData   := mem.io.rdData 
     wb.io.aluData   := alu.io.out
-    wb.io.memToReg    := ctrl.io.memToReg //~
-    wb.io.wrEnable  := true.B //ctrl.io.memToReg
+    wb.io.memToReg  := ctrl.io.memToReg
+    wb.io.wrEnable  := true.B 
     // //wb.io.wrEnable  := false.B 
     // when(ctrl.io.memToReg){
     //   wb.io.wrEnable := true.B

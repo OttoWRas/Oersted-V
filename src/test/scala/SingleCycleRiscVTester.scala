@@ -52,7 +52,7 @@ object helperFunc {
 
 class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
   "MAIN tester" should "pass" in {
-    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task1/shift2.bin"))) { m=>
+    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task2/branchcnt.bin"))) { m=>
     val sb = new StringBuilder  
    
   breakable  {
@@ -100,7 +100,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
           sb.append(f"$v%08x" + "\n")
   }
 
-  sb.toString should be (helperFunc.hexToString("./testData/task1/shift2.res"))
+  sb.toString should be (helperFunc.hexToString("./testData/task2/branchcnt.res"))
   
 
     println(" ")

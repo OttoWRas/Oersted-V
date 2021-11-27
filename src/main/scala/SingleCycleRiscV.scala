@@ -77,8 +77,9 @@ class SingleCycleRiscV(program: String = "") extends Module {
     io.rd2Debug := reg.io.rdData2
 
     /* decode */
-    dec.io.in       := ins.io.instOut
+   dec.io.in       := ins.io.instOut
     imm.io.in       := ins.io.instOut
+
 
     /* execute */
     alu.io.opcode   := dec.io.aluOp

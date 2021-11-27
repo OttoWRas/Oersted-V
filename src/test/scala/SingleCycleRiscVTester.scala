@@ -100,7 +100,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
           sb.append(f"$v%08x" + "\n")
   }
 
-  sb.toString should be (helperFunc.hexToString("./testData/task2/branchcnt.res"))
+  sb.toString should be (helperFunc.hexToString("./testData/task1/branchcnt.res"))
   
 
     println(" ")

@@ -38,6 +38,7 @@ class Control extends Module {
 */
 
     switch(io.in){
+        /* slightly unsure about these */
         is(OP_JAL, OP_JALR){
             io.ALUSrc    := true.B 
             io.memToReg  := true.B

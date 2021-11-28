@@ -112,8 +112,9 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val immBuff = Reg(UInt(32.W))
     decBuff := 0.U.asTypeOf(new DecodeOut)
 
+
     when(~stop) {
-      decBuff := dec.out
+      decBuff := dec.out // does this actually work? Check GTKWave.. 
       opBuff  := dec.io.aluOp
       immBuff := imm.io.out.asUInt
     }
@@ -128,7 +129,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     alu.io.data1   := reg.io.rdData1
     alu.io.opcode  := opBuff
 
-    when(immBuff =/= 0.U) { 
+    when(immBuff =/= 0.U) { // this should be ctrl.io.ALUSrc.. seems dangerous to rely on this i think.. 
       alu.io.data2 := immBuff
     }.otherwise {
       alu.io.data2 := reg.io.rdData2 

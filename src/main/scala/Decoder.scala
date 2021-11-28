@@ -167,7 +167,7 @@ class Decoder extends MultiIOModule {
                 immTemp := I.imm11to0 | "hFFFFF000".U // extend with 1's
             }
             out.imm := immTemp.asSInt
-
+        
             /* determine ALU operation */
             switch(I.funct3){
                 is(0.U){ io.aluOp := ALU_ADD }

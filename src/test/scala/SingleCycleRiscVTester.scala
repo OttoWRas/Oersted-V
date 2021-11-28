@@ -6,7 +6,8 @@ import chiseltest._
 import chisel3._
 import matchers._
 import scala.util.control.Breaks._
-
+import chiseltest.internal.WriteVcdAnnotation
+import chiseltest.experimental.TestOptionBuilder._
 import java.nio.file.{Files, Paths}
 import java.io._
 object helperFunc {
@@ -52,11 +53,11 @@ object helperFunc {
 
 class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
   "MAIN tester" should "pass" in {
-    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task1/addlarge.bin"))) { m=>
+    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task1/addlarge.bin"))).withAnnotations(Seq(WriteVcdAnnotation)) { m=>
     val sb = new StringBuilder  
    
   breakable  {
-    for (w <- 0 to 16) {
+    for (w <- 0 to 30) {
       
     var pc = m.io.pcDebug.peek().litValue()
     var ins =  m.io.instrDebug.peek().litValue()

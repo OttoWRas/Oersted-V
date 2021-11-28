@@ -6,6 +6,7 @@ import OP._
 
 class SingleCycleRiscV(program: String = "") extends Module {
   val io = IO(new Bundle {
+    
     val regDebug    = Output(Vec(32, UInt(32.W))) // debug output for the tester
     val pcDebug     = Output(SInt(32.W))
     val instrDebug  = Output(UInt(32.W))
@@ -18,9 +19,23 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val rs2Debug         = Output(UInt(5.W))
     val rd1Debug         = Output(UInt(32.W))
     val rd2Debug         = Output(UInt(32.W))
-    val aLUSrcDebug      = Output(Bool())
+  // val aLUSrcDebug      = Output(Bool())
     val funct7Debug      = Output(UInt(7.W))
     val immDebug         = Output(SInt(32.W))
+
+  /* intermidiate debug*/
+    val decBuffD         = Output(UInt(32.W))
+    val immBuffD         = Output(UInt(32.W))
+    val aluBuffD         = Output(UInt(32.W))
+    val opcBuffD         = Output(UInt(32.W))
+
+    val memBuffD         = Output(UInt(32.W))
+    val memAluBuffD      = Output(UInt(32.W))
+    val memOpcBuffD      = Output(UInt(32.W))
+
+    val wbMemBuffD       = Output(UInt(32.W))
+    val wbAluBuffD       = Output(UInt(32.W))
+    val wbOpcBuffD       = Output(UInt(32.W))
 
   /* alu debug */
     val aluOutDebug     = Output(UInt(32.W))
@@ -28,118 +43,190 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
     val pcJmpAddrDebug = Output(SInt(32.W))
 
-    val ctrlBranchDebug = Output(Bool())
+    //val ctrlBranchDebug = Output(Bool())
     val done              = Output(Bool())
   })
     //val decDebug = IO(Output(new DecodeOut))
-    
 
     val mem    = Module(new Memory(program))
     val pc     = Module(new ProgramCounter)
-    val ins    = Module(new InstBuff)
-    val ctrl   = Module(new Control)
-    val reg    = Module(new Registers)
     val dec    = Module(new Decoder)
     val alu    = Module(new ALU)
-    val wb     = Module(new WriteBack)
     val imm    = Module(new ImmediateGen)
-
-    /* fetch / initialization */
-    pc.io.flagIn    := ins.io.flagOut
-
-    /* branching logics */
-    pc.io.pcPlus    := true.B
-    pc.io.jmpAddr   := 0.S
-    pc.io.wrEnable  := false.B
-    when(alu.io.cmpOut.asBool & ctrl.io.branch){
-      pc.io.pcPlus    := false.B
-      pc.io.wrEnable  := true.B
-      pc.io.jmpAddr   := (pc.io.pcAddr + imm.io.out)
-      //ins.io.flagIn   := true.B
-      pc.io.flagIn := true.B
-    }
-    ctrl.io.in      := ins.io.instOut(6,0)  
-
-    ins.io.flagIn   := pc.io.flagOut
-    ins.io.instIn   := mem.io.rdData
-
-    mem.io.wrEnable := ctrl.io.memWrite
-    mem.io.wrData   := reg.io.rdData2
-    mem.io.wrAddr   := alu.io.out
-    mem.io.rdAddr   := (pc.io.pcAddr>>2).asUInt /* divide by four so we read addresses 1,2,3,4 instead of 0, 4, 8 etc */
-
-    reg.io.wrEnable := ctrl.io.regWrite
-    reg.io.wrData   := wb.io.wrBack 
-    reg.io.wrAddr   := dec.out.rd
-    reg.io.rdAddr1  := dec.out.rs1
-    reg.io.rdAddr2  := dec.out.rs2
+    val reg    = Module(new Registers)
+    val instBuff = Reg(UInt(32.W))
 
     io.rd1Debug := reg.io.rdData1
     io.rd2Debug := reg.io.rdData2
 
-    /* decode */
-    dec.io.in       := ins.io.instOut
-    imm.io.in       := ins.io.instOut
-
-    /* execute */
-    alu.io.opcode   := dec.io.aluOp
-    alu.io.data1    := reg.io.rdData1
-    alu.io.data2    := WireDefault(0.U)
-    
-    when(ctrl.io.ALUSrc){ 
-      alu.io.data2 := imm.io.out.asUInt
-    }.otherwise {
-      alu.io.data2 := reg.io.rdData2 
-    }
-
-    io.aLUSrcDebug := ctrl.io.ALUSrc
-    
-    /* write back */
-    wb.io.memData   := mem.io.rdData 
-    wb.io.aluData   := alu.io.out
-    wb.io.memToReg  := ctrl.io.memToReg
-    wb.io.wrEnable  := true.B 
-    // //wb.io.wrEnable  := false.B 
-    // when(ctrl.io.memToReg){
-    //   wb.io.wrEnable := true.B
-    // }.otherwise {
-    //   wb.io.wrEnable := false.B 
-    // }
-
-  
-
     /* debugging outputs */
     io.pcDebug := pc.io.pcAddr
-    io.instrDebug := ins.io.instOut // mem.io.rdData //instr.io.instOut
+    io.instrDebug := instBuff // mem.io.rdData //instr.io.instOut
 
   /* decode debug */
     io.opcodeDebug := dec.out.opcode
     io.rdDebug := dec.out.rd
     io.funct3Debug := dec.out.funct3
-    io.rs1Debug := dec.out.rs1
-    io.rs2Debug := dec.out.rs2
     io.funct7Debug := dec.out.funct7
     io.immDebug := imm.io.out
-    
+  
+
     /* alu debug */
     io.aluCmpOutDebug := alu.io.cmpOut
     io.aluOutDebug := alu.io.out
 
     io.pcJmpAddrDebug := (pc.io.pcAddr + imm.io.out)
+    io.done := false.B
 
-    io.ctrlBranchDebug := ctrl.io.branch
-   // io.regDebug := reg.io.debugOut
-  
     for(i <- 0 to 31){
       io.regDebug(i) := reg.io.regDebug(i)
     }
-    io.done := false.B
-    when((ins.io.instOut(6,0) === OP_IE) & (reg.io.x17 === 10.U)){
-      io.done := true.B
+
+    val stop     = WireDefault(false.B)
+    val branch   = WireDefault(false.B)
+    val pck = RegInit(0.U(32.W))
+
+    pc.io.wrEnable := true.B
+    pc.io.flagIn := true.B
+    pc.io.pcPlus := true.B
+    mem.io.rdAddr := pck
+    pc.io.jmpAddr := 0.S
+    
+    when (~stop) {
+      instBuff := mem.io.rdData 
+      pck := pck + 1.U
+      pc.io.pcPlus := false.B
+      when (branch) {
+        //mem.io.rdAddr := alu.io.out
+        pc.io.jmpAddr := mem.io.rdData.asSInt
+      }.otherwise{
+        //pc.io.pcPlus := true.B
+      }
+    }
+
+    dec.io.in := instBuff
+    imm.io.in := instBuff
+    
+    val decBuff = Reg(Output(new DecodeOut))
+    val opBuff  = Reg(UInt(4.W))
+    val immBuff = Reg(UInt(32.W))
+    decBuff := 0.U.asTypeOf(new DecodeOut)
+
+    when(~stop) {
+      decBuff := dec.out
+      opBuff  := dec.io.aluOp
+      immBuff := imm.io.out.asUInt
+    }
+
+    when (branch) {
+      //decBuff := 0.U.asTypeOf(new DecodeOut)
+      //immBuff := 0.U
+    }
+
+    reg.io.rdAddr1 := decBuff.rs1
+    reg.io.rdAddr2 := decBuff.rs2
+    alu.io.data1   := reg.io.rdData1
+    alu.io.opcode  := opBuff
+
+    when(immBuff =/= 0.U) { 
+      alu.io.data2 := immBuff
+    }.otherwise {
+      alu.io.data2 := reg.io.rdData2 
     }
     
-}
+    when (decBuff.opcode === "b1100011".U & alu.io.cmpOut.asBool) {
+        branch := true.B
+    }.elsewhen ( decBuff.opcode === "b1100111".U
+      ||  decBuff.opcode === "b1101111".U) {
+        branch := true.B
+    }
 
+    val aluBuff = Reg(UInt(32.W))
+    val opcBuff = Reg(UInt(20.W))
+
+    when (~stop) {
+      aluBuff := alu.io.out
+      opcBuff := Cat(decBuff.opcode, decBuff.funct3, decBuff.rs2, decBuff.rd)
+    }
+
+    val memBuff    = Reg(UInt(32.W))
+    val memAluBuff = Reg(UInt(32.W))
+    val memOpcBuff = Reg(UInt(20.W))
+
+    when (~stop) {
+      memAluBuff := aluBuff
+      memOpcBuff := opcBuff
+    }
+    mem.io.wrAddr := WireDefault(0.U)
+    reg.io.wrAddr := WireDefault(0.U)
+    reg.io.rdAddr3 := WireDefault(0.U)
+    mem.io.wrEnable := false.B
+    mem.io.wrData := WireDefault(0.U)
+
+    when(memOpcBuff(6,0) === "b0000011".U || memOpcBuff(6,0) === "b0100011".U) {
+      stop := true.B
+      when(memOpcBuff(6,0) === "b0000011".U) {
+        mem.io.rdAddr := memAluBuff
+        memBuff       := mem.io.rdData
+
+        switch(memOpcBuff(8, 7)) {
+          is(0.U) {mem.io.wrData   := reg.io.rdData3(7, 0)}
+          is(2.U) {mem.io.wrData   := reg.io.rdData3}
+        }
+      }
+
+      when(memOpcBuff(6,0) === "b0100011".U) {
+        mem.io.wrEnable := true.B
+        mem.io.wrAddr   := memAluBuff
+        reg.io.rdAddr3  := memOpcBuff(14,9)
+        
+        switch(memOpcBuff(8,7)) {
+          is(0.U) {mem.io.wrData   := reg.io.rdData3(7,0)}
+          is(2.U) {mem.io.wrData   := reg.io.rdData3}
+          is(4.U) {mem.io.wrData   := reg.io.rdData3(7,0)} //needs sign extend
+        }
+      }
+    }
+    
+    val wbMemBuff = Reg(UInt(32.W))
+    val wbAluBuff = Reg(UInt(32.W))
+    val wbOpcBuff = Reg(UInt(20.W))
+
+    when (~stop) {
+      wbMemBuff := memBuff
+      wbAluBuff := memAluBuff
+      wbOpcBuff := memOpcBuff
+    }
+
+    reg.io.wrEnable := true.B
+    reg.io.wrData   := wbAluBuff
+    reg.io.wrAddr   := wbOpcBuff(4,0)
+    /*when (~(wbOpcBuff(6,0) === "b0000011".U)) {
+        reg.io.wrEnable := true.B
+        reg.io.wrAddr   := wbOpcBuff(19,15)
+      when (wbOpcBuff(6,0) === "b0100011"U) {
+        reg.io.wrData   := wbMemBuff
+      }.otherwise {
+    }
+  }*/
+
+      /* intermidiate debug*/
+    io.decBuffD := decBuff.rd
+    io.immBuffD := immBuff
+    io.aluBuffD := aluBuff
+    
+    io.opcBuffD := decBuff.opcode
+    io.rs1Debug := decBuff.rs1
+    io.rs2Debug := decBuff.rs2
+
+    io.memBuffD    := memBuff   
+    io.memAluBuffD := memAluBuff
+    io.memOpcBuffD := memOpcBuff
+
+    io.wbMemBuffD  := wbOpcBuff(4,0)
+    io.wbAluBuffD  := wbAluBuff
+    io.wbOpcBuffD  := wbOpcBuff(19,14)
+}
 
 object CPU extends App {
   (new chisel3.stage.ChiselStage).emitVerilog(new SingleCycleRiscV)

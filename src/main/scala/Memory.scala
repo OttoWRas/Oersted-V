@@ -15,18 +15,20 @@ class Memory(fileToLoad: String = "") extends Module {
     })
 
     val mem = SyncReadMem(1792000, UInt(32.W)) // 224MB of ram, similar to FPGA
-
    
     //  printf("rdAddr = %d\n \n", io.rdAddr)
     // printf("rdData = %d\n \n", mem.read(io.rdAddr))
     // printf("data pos 0 = %d", mem.read(0.U))
     when (io.wrEnable) {
+        io.rdData := 0.U
         mem.write(io.wrAddr, io.wrData)
+    }.otherwise {
+        io.rdData := mem.read(io.rdAddr)
     }
     if (!(fileToLoad == "")) {
         loadMemoryFromFile(mem, fileToLoad)
         
     }
-     io.rdData := mem.read(io.rdAddr)
+     
     // printf("rdData = %d\n \n", mem.read(io.rdAddr))
 }

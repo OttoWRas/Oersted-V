@@ -7,6 +7,7 @@ class Registers extends Module {
     val io = IO(new Bundle {
         val rdAddr1     = Input(UInt(32.W))
         val rdAddr2     = Input(UInt(32.W))
+        val rdAddr3     = Input(UInt(32.W))
         val wrEnable    = Input(Bool())
         val wrData      = Input(UInt(32.W))
       
@@ -14,7 +15,8 @@ class Registers extends Module {
 
         val rdData1     = Output(UInt(32.W))
         val rdData2     = Output(UInt(32.W))
-        val x17          = Output(UInt(32.W)) // to for a7 on ecall
+        val rdData3     = Output(UInt(32.W))
+        val x17         = Output(UInt(32.W)) // to for a7 on ecall
 
         val regDebug    = Output(Vec(32, UInt(32.W)))
     })
@@ -23,13 +25,15 @@ class Registers extends Module {
 
     io.rdData1 := WireDefault(0.U)
     io.rdData2 := WireDefault(0.U)
+    io.rdData3 := WireDefault(0.U)
 
-    when (io.wrEnable) {
+    when (io.wrEnable && io.wrAddr =/= 0.U) {
         registerFile(io.wrAddr) := io.wrData
     }
     //when (!io.wrEnable) {
         io.rdData1 := registerFile(io.rdAddr1)
         io.rdData2 := registerFile(io.rdAddr2)
+        io.rdData3 := registerFile(io.rdAddr3)
     //}
     io.x17 := registerFile(17.U)
 

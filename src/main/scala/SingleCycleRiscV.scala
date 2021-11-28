@@ -24,6 +24,8 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val immDebug         = Output(SInt(32.W))
 
   /* intermidiate debug*/
+    val hazardD          = Output(Bool())
+
     val decBuffD         = Output(UInt(32.W))
     val immBuffD         = Output(UInt(32.W))
     val aluBuffD         = Output(UInt(32.W))
@@ -83,6 +85,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     }
 
     val stop     = WireDefault(false.B)
+    val hazard   = WireDefault(false.B)
     val branch   = WireDefault(false.B)
     val pck = RegInit(0.U(32.W))
 
@@ -92,10 +95,18 @@ class SingleCycleRiscV(program: String = "") extends Module {
     mem.io.rdAddr := pck
     pc.io.jmpAddr := 0.S
     
-    when (~stop) {
+    val hazardFlag = Reg(Bool())
+    
+    when(hazard && ~hazardFlag) {
+      pck := pck - 1.U
+      hazardFlag := true.B
+    }
+
+    when (~stop && ~hazard) {
       instBuff := mem.io.rdData 
       pck := pck + 1.U
       pc.io.pcPlus := false.B
+      hazardFlag := false.B
       when (branch) {
         //mem.io.rdAddr := alu.io.out
         pc.io.jmpAddr := mem.io.rdData.asSInt
@@ -112,11 +123,14 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val immBuff = Reg(UInt(32.W))
     decBuff := 0.U.asTypeOf(new DecodeOut)
 
-
-    when(~stop) {
+    when(~stop && ~hazard) {
       decBuff := dec.out // does this actually work? Check GTKWave.. 
       opBuff  := dec.io.aluOp
       immBuff := imm.io.out.asUInt
+    }.elsewhen(hazard) {
+      decBuff := 0.U.asTypeOf(new DecodeOut) // does this actually work? Check GTKWave.. 
+      opBuff  := 0.U
+      immBuff := 0.U
     }
 
     when (branch) {
@@ -211,12 +225,17 @@ class SingleCycleRiscV(program: String = "") extends Module {
     }
   }*/
 
+    when(((dec.out.rs1 === opcBuff(4,0) || dec.out.rs1 === memOpcBuff(4,0)) && dec.out.rs1 =/= 0.U) 
+    || ((dec.out.rs2 === opcBuff(4,0) || dec.out.rs2 === memOpcBuff(4,0)) && dec.out.rs2 =/= 0.U)) {
+        hazard := true.B
+      }
+
       /* intermidiate debug*/
     io.decBuffD := decBuff.rd
     io.immBuffD := immBuff
     io.aluBuffD := aluBuff
     
-    io.opcBuffD := decBuff.opcode
+    io.opcBuffD := opcBuff
     io.rs1Debug := decBuff.rs1
     io.rs2Debug := decBuff.rs2
 
@@ -227,6 +246,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     io.wbMemBuffD  := wbOpcBuff(4,0)
     io.wbAluBuffD  := wbAluBuff
     io.wbOpcBuffD  := wbOpcBuff(19,14)
+    io.hazardD     := hazard
 }
 
 object CPU extends App {

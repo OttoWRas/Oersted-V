@@ -57,7 +57,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     val sb = new StringBuilder  
    
   breakable  {
-    for (w <- 0 to 30) {
+    for (w <- 0 to 24) {
       
     var pc = m.io.pcDebug.peek().litValue()
     var ins =  m.io.instrDebug.peek().litValue()
@@ -83,6 +83,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     var wbMemBuffD = m.io.wbMemBuffD.peek().litValue()
     var wbAluBuffD = m.io.wbAluBuffD.peek().litValue()
     var wbOpcBuffD = m.io.wbOpcBuffD.peek().litValue()
+    var hazard = m.io.hazardD.peek().litValue()
 
    // var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
     var done = m.io.done.peek().litValue()
@@ -92,7 +93,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
 
      
         println(f"\n dec:$decBuffD imm:$immBuffD alu:$aluBuffD opc:$opcBuffD \n\n mem:$memBuffD memAlu:$memAluBuffD memOpc:$memOpcBuffD \n\n wbmem:$wbMemBuffD wbalu:$wbAluBuffD wbopc:$wbOpcBuffD \n\n")
-        println()
+        println(f"hazard: $hazard")
         print(f"instruction: $ins%08x at $pc - jmpaddr: $pcJmpAddr and ctrlBranch =")
         println()
         print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = \n\n")

@@ -4,15 +4,15 @@ import chisel3._
 import chisel3.util._
 
 object OP {
-    val OP_R:     UInt = 51.U(7.W)
-    val OP_I:     UInt = 19.U(7.W) // 'regular' I instructions
-    val OP_IL:    UInt = 3.U(7.W) // type I load instructions
-    val OP_IE:    UInt = 115.U(7.W) // type I environment call instructions 
-    val OP_S:     UInt = 32.U(7.W)
-    val OP_B:     UInt = 99.U(7.W) 
-    val OP_JAL:   UInt = 111.U(7.W) // J type
-    val OP_JALR:  UInt = 103.U(7.W) // I type
-    val OP_LUI:   UInt = 55.U(7.W) // U type
+    val OP_R:     UInt = "b0110011".U(7.W) // 51.U(7.W)
+    val OP_I:     UInt = "b0010011".U(7.W) // 19.U(7.W) // 'regular' I instructions
+    val OP_IL:    UInt = "b0000011".U(7.W) // 3.U(7.W) // type I load instructions
+    val OP_IE:    UInt = "b1110011".U(7.W) // 115.U(7.W) // type I environment call instructions 
+    val OP_S:     UInt = "b0100011".U(7.W) // 32.U(7.W)
+    val OP_B:     UInt = "b1100011".U(7.W) // 99.U(7.W) 
+    val OP_JAL:   UInt = "b1101111".U(7.W) // 111.U(7.W) // J type
+    val OP_JALR:  UInt = "b1100111".U(7.W) // 103.U(7.W) // I type
+    val OP_LUI:   UInt = "b0110111".U(7.W) // 55.U(7.W) // U type
     val OP_AUIPC: UInt = "b0010111".U(7.W) // U type 
 }
 

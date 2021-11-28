@@ -134,10 +134,10 @@ class SingleCycleRiscV(program: String = "") extends Module {
       alu.io.data2 := reg.io.rdData2 
     }
     
-    when (decBuff.opcode === "b1100011".U & alu.io.cmpOut.asBool) {
+    when (decBuff.opcode === OP_B & alu.io.cmpOut.asBool) { //"b1100011".U
         branch := true.B
-    }.elsewhen ( decBuff.opcode === "b1100111".U
-      ||  decBuff.opcode === "b1101111".U) {
+    }.elsewhen ( decBuff.opcode === OP_JALR // "b1100111".U
+      ||  decBuff.opcode === OP_JAL) { // "b1101111".U
         branch := true.B
     }
 
@@ -163,9 +163,9 @@ class SingleCycleRiscV(program: String = "") extends Module {
     mem.io.wrEnable := false.B
     mem.io.wrData := WireDefault(0.U)
 
-    when(memOpcBuff(6,0) === "b0000011".U || memOpcBuff(6,0) === "b0100011".U) {
+    when(memOpcBuff(6,0) === OP_IL || memOpcBuff(6,0) === OP_S) { // "b0000011".U - "b0100011".U
       stop := true.B
-      when(memOpcBuff(6,0) === "b0000011".U) {
+      when(memOpcBuff(6,0) === OP_IL) {
         mem.io.rdAddr := memAluBuff
         memBuff       := mem.io.rdData
 
@@ -175,7 +175,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
         }
       }
 
-      when(memOpcBuff(6,0) === "b0100011".U) {
+      when(memOpcBuff(6,0) === OP_S) { //"b0100011".U
         mem.io.wrEnable := true.B
         mem.io.wrAddr   := memAluBuff
         reg.io.rdAddr3  := memOpcBuff(14,9)

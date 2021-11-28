@@ -96,7 +96,7 @@ class ImmUTypeTest (dut: ImmediateGen) extends PeekPokeTester(dut) {
     
     poke(dut.io.in, bitString)
     step(1)
-    expect(dut.io.out, imm>>12)
+    expect(dut.io.out, imm)
    }
 }
 

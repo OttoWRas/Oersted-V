@@ -57,11 +57,12 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val reg    = Module(new Registers)
     val instBuff = Reg(UInt(32.W))
 
+
     io.rd1Debug := reg.io.rdData1
     io.rd2Debug := reg.io.rdData2
 
     /* debugging outputs */
-    io.instrDebug := instBuff // mem.io.rdData //instr.io.instOut
+ 
 
   /* decode debug */
     io.opcodeDebug := dec.out.opcode
@@ -85,6 +86,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val stop     = WireDefault(false.B)
     val hazard   = WireDefault(false.B)
     val branch   = WireDefault(false.B)
+    val inst     = Wire(UInt(32.W))
     val pck = RegInit(0.U(32.W))
 
     pc.io.wrEnable := true.B
@@ -94,27 +96,31 @@ class SingleCycleRiscV(program: String = "") extends Module {
     pc.io.jmpAddr := 0.S
     
     val hazardFlag = Reg(Bool())
+    val pckBuff = Reg(UInt(32.W))
+    val aluPckBuff = Reg(UInt(32.W))
     
-    when(hazard && ~hazardFlag) {
+    when(hazard && ~hazardFlag && ~branch) {
       pck := pck - 4.U
+      //pckBuff := pckBuff + 4.U
+      //aluPckBuff := aluPckBuff + 4.U
       hazardFlag := true.B
     }
 
     when (~stop && ~hazard) {
-      instBuff := mem.io.rdData 
-      pck := pck + 4.U
+      instBuff := mem.io.rdData
       pc.io.pcPlus := false.B
       hazardFlag := false.B
-      when (branch) {
+      when (~branch) {
         //mem.io.rdAddr := alu.io.out
+        pck := pck + 4.U
         pc.io.jmpAddr := mem.io.rdData.asSInt
       }.otherwise{
-        //pc.io.pcPlus := true.B
+        //pck := pck - 4.U
       }
     }
 
-    dec.io.in := instBuff
-    imm.io.in := instBuff
+    dec.io.in := inst
+    imm.io.in := inst
     
     val decBuff = Reg(Output(new DecodeOut))
     val opBuff  = Reg(UInt(4.W))
@@ -122,6 +128,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     decBuff := 0.U.asTypeOf(new DecodeOut)
 
     when(~stop && ~hazard) {
+      pckBuff := pck - 4.U
       decBuff := dec.out // does this actually work? Check GTKWave.. 
       opBuff  := dec.io.aluOp
       immBuff := imm.io.out.asUInt
@@ -159,10 +166,12 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val opcBuff = Reg(UInt(20.W))
     val aluImmBuff = Reg(UInt(32.W))
 
+
     when (~stop) {
       aluBuff := alu.io.out
       cmpBuff := alu.io.cmpOut
       aluImmBuff := immBuff
+      aluPckBuff := pckBuff
       opcBuff := Cat(decBuff.opcode, decBuff.funct3, decBuff.rs2, decBuff.rd)
     }
 
@@ -213,8 +222,10 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val wbMemBuff = Reg(UInt(32.W))
     val wbAluBuff = Reg(UInt(32.W))
     val wbOpcBuff = Reg(UInt(20.W))
+    val wbPckBuff = Reg(UInt(32.W))
 
     when (~stop) {
+      wbPckBuff := aluPckBuff
       wbMemBuff := memBuff
       wbAluBuff := aluBuff
       wbOpcBuff := opcBuff
@@ -254,13 +265,29 @@ class SingleCycleRiscV(program: String = "") extends Module {
     io.wbOpcBuffD  := wbOpcBuff(6,0)
     io.hazardD     := branch 
     io.pcDebug     := pck
+    io.instrDebug := inst // mem.io.rdData //instr.io.instOut
+
+    val branchFlag = Reg(Bool())
+    val branchFlag2 = Reg(Bool())
 
     when(branch) {
-      instBuff := mem.io.rdData
-      mem.io.rdAddr := (pck + aluImmBuff) - 12.U
+      inst := 0.U
+      mem.io.rdAddr := (wbPckBuff + aluImmBuff)
       reg.io.rdAddr3  := opcBuff(6,0)
-      pck := (pck + aluImmBuff) - 12.U
+      pck := (wbPckBuff + aluImmBuff)
       hazardFlag := false.B
+      branchFlag := true.B
+      branchFlag2 := true.B
+    }.elsewhen(branchFlag) {
+      inst := 0.U
+      branchFlag := false.B
+    }.elsewhen(~branchFlag && branchFlag2) {
+      //pckBuff := pckBuff - 4.U
+      //aluPckBuff := aluPckBuff - 4.U
+      inst := 0.U
+      branchFlag2 := false.B
+    }.otherwise {
+      inst := instBuff
     }
 }
 

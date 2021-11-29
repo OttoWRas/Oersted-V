@@ -6,7 +6,6 @@ import OP._
 
 class SingleCycleRiscV(program: String = "") extends Module {
   val io = IO(new Bundle {
-    
     val regDebug    = Output(Vec(32, UInt(32.W))) // debug output for the tester
     val pcDebug     = Output(SInt(32.W))
     val instrDebug  = Output(UInt(32.W))

@@ -58,7 +58,7 @@ class ALU extends Module {
     when (io.opcode === ALU_ADD || io.opcode === ALU_SUB) { wOut := sum }
     when (io.opcode === ALU_SLT || io.opcode === ALU_SLTU) { wOut := cmp }
     when (io.opcode === ALU_SRA || io.opcode === ALU_SRL) { wOut := shiftR }
-    when (io.opcode === ALU_SLL) { wOut := shiftL }
+    when (io.opcode === ALU_SLL) { wOut := shiftL}
     when (io.opcode === ALU_AND) { wOut := io.data1 & io.data2 }
     when (io.opcode === ALU_OR) { wOut := io.data1 | io.data2 }
     when (io.opcode === ALU_XOR) { wOut := io.data1 ^ io.data2 }

@@ -94,4 +94,25 @@ class ALUtest extends FlatSpec with ChiselScalatestTester with Matchers {
       }
     }
   }
+
+  "ALU CMP test" should "pass" in {
+    test(new ALU) { c=>
+      for (w <- 0 to 1000) {
+        val r = new scala.util.Random
+        val a = r.nextInt(10000)
+        val b = a+6
+
+        c.io.opcode.poke(ALU_SEQ)
+        c.io.data1.poke(a.U)
+        c.io.data2.poke(a.U)
+        c.io.cmpOut.expect(true.B)
+        
+        c.io.opcode.poke(ALU_SNE)
+        c.io.data1.poke(a.U)
+        c.io.data2.poke(b.U)
+        c.io.cmpOut.expect(true.B)
+
+      }
+    }
+  }
 }

@@ -8,7 +8,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
   val io = IO(new Bundle {
     
     val regDebug    = Output(Vec(32, UInt(32.W))) // debug output for the tester
-    val pcDebug     = Output(SInt(32.W))
+    val pcDebug     = Output(UInt(32.W))
     val instrDebug  = Output(UInt(32.W))
     
     /* decoder debug */
@@ -33,7 +33,6 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
     val memBuffD         = Output(UInt(32.W))
     val memAluBuffD      = Output(UInt(32.W))
-    val memOpcBuffD      = Output(UInt(32.W))
 
     val wbMemBuffD       = Output(UInt(32.W))
     val wbAluBuffD       = Output(UInt(32.W))
@@ -62,7 +61,6 @@ class SingleCycleRiscV(program: String = "") extends Module {
     io.rd2Debug := reg.io.rdData2
 
     /* debugging outputs */
-    io.pcDebug := pc.io.pcAddr
     io.instrDebug := instBuff // mem.io.rdData //instr.io.instOut
 
   /* decode debug */
@@ -92,19 +90,19 @@ class SingleCycleRiscV(program: String = "") extends Module {
     pc.io.wrEnable := true.B
     pc.io.flagIn := true.B
     pc.io.pcPlus := true.B
-    mem.io.rdAddr := pck
+    mem.io.rdAddr := pck/4.U
     pc.io.jmpAddr := 0.S
     
     val hazardFlag = Reg(Bool())
     
     when(hazard && ~hazardFlag) {
-      pck := pck - 1.U
+      pck := pck - 4.U
       hazardFlag := true.B
     }
 
     when (~stop && ~hazard) {
       instBuff := mem.io.rdData 
-      pck := pck + 1.U
+      pck := pck + 4.U
       pc.io.pcPlus := false.B
       hazardFlag := false.B
       when (branch) {
@@ -134,8 +132,8 @@ class SingleCycleRiscV(program: String = "") extends Module {
     }
 
     when (branch) {
-      //decBuff := 0.U.asTypeOf(new DecodeOut)
-      //immBuff := 0.U
+      decBuff := 0.U.asTypeOf(new DecodeOut)
+      immBuff := 0.U
     }
 
     reg.io.rdAddr1 := decBuff.rs1
@@ -143,59 +141,68 @@ class SingleCycleRiscV(program: String = "") extends Module {
     alu.io.data1   := reg.io.rdData1
     alu.io.opcode  := opBuff
 
-    when(immBuff =/= 0.U) { // this should be ctrl.io.ALUSrc.. seems dangerous to rely on this i think.. 
+    when(immBuff =/= 0.U && decBuff.opcode =/= OP_B) { // this should be ctrl.io.ALUSrc.. seems dangerous to rely on this i think.. 
       alu.io.data2 := immBuff
     }.otherwise {
       alu.io.data2 := reg.io.rdData2 
     }
-    
+    /*
     when (decBuff.opcode === OP_B & alu.io.cmpOut.asBool) { //"b1100011".U
         branch := true.B
     }.elsewhen ( decBuff.opcode === OP_JALR // "b1100111".U
       ||  decBuff.opcode === OP_JAL) { // "b1101111".U
         branch := true.B
-    }
+    }*/
 
     val aluBuff = Reg(UInt(32.W))
+    val cmpBuff = Reg(Bool())
     val opcBuff = Reg(UInt(20.W))
+    val aluImmBuff = Reg(UInt(32.W))
 
     when (~stop) {
       aluBuff := alu.io.out
+      cmpBuff := alu.io.cmpOut
+      aluImmBuff := immBuff
       opcBuff := Cat(decBuff.opcode, decBuff.funct3, decBuff.rs2, decBuff.rd)
     }
 
-    val memBuff    = Reg(UInt(32.W))
-    val memAluBuff = Reg(UInt(32.W))
-    val memOpcBuff = Reg(UInt(20.W))
-
-    when (~stop) {
-      memAluBuff := aluBuff
-      memOpcBuff := opcBuff
+    when (branch) {
+      aluBuff := 0.U
+      cmpBuff := 0.U
+      aluImmBuff := 0.U
+      opcBuff := 0.U
     }
+
+    val memBuff = Reg(UInt(32.W))
+
     mem.io.wrAddr := WireDefault(0.U)
     reg.io.wrAddr := WireDefault(0.U)
     reg.io.rdAddr3 := WireDefault(0.U)
     mem.io.wrEnable := false.B
     mem.io.wrData := WireDefault(0.U)
 
-    when(memOpcBuff(6,0) === OP_IL || memOpcBuff(6,0) === OP_S) { // "b0000011".U - "b0100011".U
+    when(opcBuff(19,13) === OP_B && cmpBuff) {
+      branch := true.B
+    }
+
+    when(opcBuff(6,0) === OP_IL || opcBuff(6,0) === OP_S) { // "b0000011".U - "b0100011".U
       stop := true.B
-      when(memOpcBuff(6,0) === OP_IL) {
-        mem.io.rdAddr := memAluBuff
+      when(opcBuff(6,0) === OP_IL) {
+        //mem.io.rdAddr := aluBuff/4.U
         memBuff       := mem.io.rdData
 
-        switch(memOpcBuff(8, 7)) {
+        switch(opcBuff(8, 7)) {
           is(0.U) {mem.io.wrData   := reg.io.rdData3(7, 0)}
           is(2.U) {mem.io.wrData   := reg.io.rdData3}
         }
       }
 
-      when(memOpcBuff(6,0) === OP_S) { //"b0100011".U
+      when(opcBuff(6,0) === OP_S) { //"b0100011".U
         mem.io.wrEnable := true.B
-        mem.io.wrAddr   := memAluBuff
-        reg.io.rdAddr3  := memOpcBuff(14,9)
+        mem.io.wrAddr   := aluBuff
+        reg.io.rdAddr3  := opcBuff(14,9)
         
-        switch(memOpcBuff(8,7)) {
+        switch(opcBuff(8,7)) {
           is(0.U) {mem.io.wrData   := reg.io.rdData3(7,0)}
           is(2.U) {mem.io.wrData   := reg.io.rdData3}
           is(4.U) {mem.io.wrData   := reg.io.rdData3(7,0)} //needs sign extend
@@ -209,8 +216,8 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
     when (~stop) {
       wbMemBuff := memBuff
-      wbAluBuff := memAluBuff
-      wbOpcBuff := memOpcBuff
+      wbAluBuff := aluBuff
+      wbOpcBuff := opcBuff
     }
 
     reg.io.wrEnable := true.B
@@ -225,8 +232,8 @@ class SingleCycleRiscV(program: String = "") extends Module {
     }
   }*/
 
-    when(((dec.out.rs1 === opcBuff(4,0) || dec.out.rs1 === memOpcBuff(4,0)) && dec.out.rs1 =/= 0.U) 
-    || ((dec.out.rs2 === opcBuff(4,0) || dec.out.rs2 === memOpcBuff(4,0)) && dec.out.rs2 =/= 0.U)) {
+    when(((dec.out.rs1 === decBuff.rd || dec.out.rs1 === opcBuff(4,0) || dec.out.rs1 === wbOpcBuff(4,0)) && dec.out.rs1 =/= 0.U) 
+    || ((dec.out.rs2 === decBuff.rd || dec.out.rs2 === opcBuff(4,0) || dec.out.rs2 === wbOpcBuff(4,0)) && dec.out.rs2 =/= 0.U)) {
         hazard := true.B
       }
 
@@ -235,18 +242,26 @@ class SingleCycleRiscV(program: String = "") extends Module {
     io.immBuffD := immBuff
     io.aluBuffD := aluBuff
     
-    io.opcBuffD := opcBuff
-    io.rs1Debug := decBuff.rs1
-    io.rs2Debug := decBuff.rs2
+    io.opcBuffD := decBuff.opcode
+    io.rs1Debug := dec.out.rs1
+    io.rs2Debug := dec.out.rs2
 
-    io.memBuffD    := memBuff   
-    io.memAluBuffD := memAluBuff
-    io.memOpcBuffD := memOpcBuff
+    io.memBuffD    := opcBuff(19,13)   
+    io.memAluBuffD := cmpBuff
 
     io.wbMemBuffD  := wbOpcBuff(4,0)
-    io.wbAluBuffD  := wbAluBuff
-    io.wbOpcBuffD  := wbOpcBuff(19,14)
-    io.hazardD     := hazard
+    io.wbAluBuffD  := decBuff.opcode
+    io.wbOpcBuffD  := wbOpcBuff(6,0)
+    io.hazardD     := branch 
+    io.pcDebug     := pck
+
+    when(branch) {
+      instBuff := mem.io.rdData
+      mem.io.rdAddr := (pck + aluImmBuff) - 12.U
+      reg.io.rdAddr3  := opcBuff(6,0)
+      pck := (pck + aluImmBuff) - 12.U
+      hazardFlag := false.B
+    }
 }
 
 object CPU extends App {

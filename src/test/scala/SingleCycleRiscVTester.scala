@@ -1,13 +1,16 @@
 package core
 
+import java.util.regex
 import chisel3.iotesters._
 import org.scalatest._
 import chiseltest._
 import chisel3._
 import matchers._
+import sbt._
 import scala.util.control.Breaks._
 import chiseltest.internal.WriteVcdAnnotation
 import chiseltest.experimental.TestOptionBuilder._
+
 import java.nio.file.{Files, Paths}
 import java.io._
 object helperFunc {
@@ -32,8 +35,6 @@ object helperFunc {
         return args + ".hex.txt"
     }
 
-  import helperFunc._
-
   def hexToString(args: String): String = {
     val byteArray = Files.readAllBytes(Paths.get(args))
     val sb = new StringBuilder
@@ -51,13 +52,77 @@ object helperFunc {
   }
 }
 
+class RiscVSpecFull extends FlatSpec with ChiselScalatestTester with Matchers {
+  
+    val listOfFiles = new java.io.File("./testData/task1/").listFiles
+      .map(_.getPath())
+
+    val listOfBin: Array[String] = listOfFiles
+      .filter(file => file.toString.endsWith(".bin"))
+    
+    val listOfRes: Array[String] = listOfBin
+      .map[String, Array[String]](f => (f.slice(0,f.length - 3) + "res"))
+
+    val listOfTest: Array[String] = listOfBin
+      .map[String, Array[String]](f => (f.slice(17,f.length - 4) + " test"))
+
+  for (n <- 0 to listOfBin.length-1) {
+    listOfTest(n) should "pass" in { 
+      test(new SingleCycleRiscV(helperFunc.hexToFile(listOfBin(n)))).withAnnotations(Seq(WriteVcdAnnotation)) { m=>
+      
+      val sb = new StringBuilder 
+
+      for (w <- 0 to 48) {
+        var pc = m.io.pcDebug.peek().litValue()
+        var ins =  m.io.instrDebug.peek().litValue()
+        var op = m.io.opcodeDebug.peek().litValue()
+        var rd = m.io.rdDebug.peek().litValue()
+        var funct3 = m.io.funct3Debug.peek().litValue()
+        var funct7 = m.io.funct7Debug.peek().litValue()
+        var rs1 = m.io.rs1Debug.peek().litValue()
+        var rs2 = m.io.rs2Debug.peek().litValue()
+        var imm = m.io.immDebug.peek().litValue()
+        var rd1 = m.io.rd1Debug.peek().litValue()
+        var rd2 = m.io.rd2Debug.peek().litValue()
+        //var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
+        m.clock.step(1)
+         // print(f"rdAddr: $pc%x => ")
+         // print(f"rdData: $ins%8x\n \n\n")
+      //println()
+      //print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = $aluCtrl\n\n")
+          /*
+          */
+         // print(f"decoder: " + m.io.decDebug.peek())
+      /*
+      for(i <- 0 until 32){
+        if(i != 0 && i % 8 == 0) { print(f"\n") } 
+              var v = m.io.regDebug(i).peek().litValue() // peek(dut.io.regDebug(i))
+              print(f"x$i%-2d ")
+              print(f"$v%08x ")
+        }
+      */
+      }
+
+      for(i <- 0 until 32){
+        if(i != 0 && i % 8 == 0) { print(f"\n") } 
+              var v = m.io.regDebug(i).peek().litValue() // peek(dut.io.regDebug(i))
+              sb.append(f"$v%08x" + "\n")
+      }
+
+      var dn = listOfBin(n) + " " + listOfRes(n)
+      withClue(dn) { sb.toString should be (helperFunc.hexToString(listOfRes(n))) }
+    }
+    }
+  }
+}
+
 class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
   "MAIN tester" should "pass" in {
-    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task1/addlarge.bin"))).withAnnotations(Seq(WriteVcdAnnotation)) { m=>
+    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task2/branchcnt.bin"))).withAnnotations(Seq(WriteVcdAnnotation)) { m=>
     val sb = new StringBuilder  
    
   breakable  {
-    for (w <- 0 to 24) {
+    for (w <- 0 to 108) {
       
     var pc = m.io.pcDebug.peek().litValue()
     var ins =  m.io.instrDebug.peek().litValue()
@@ -78,7 +143,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     
     var memBuffD    = m.io.memBuffD.peek().litValue()
     var memAluBuffD = m.io.memAluBuffD.peek().litValue()
-    var memOpcBuffD = m.io.memOpcBuffD.peek().litValue()
+    //var memOpcBuffD = m.io.memOpcBuffD.peek().litValue()
 
     var wbMemBuffD = m.io.wbMemBuffD.peek().litValue()
     var wbAluBuffD = m.io.wbAluBuffD.peek().litValue()
@@ -92,7 +157,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     //var ctrlBranch = m.io.ctrlBranchDebug.peek().litValue()
 
      
-        println(f"\n dec:$decBuffD imm:$immBuffD alu:$aluBuffD opc:$opcBuffD \n\n mem:$memBuffD memAlu:$memAluBuffD memOpc:$memOpcBuffD \n\n wbmem:$wbMemBuffD wbalu:$wbAluBuffD wbopc:$wbOpcBuffD \n\n")
+        println(f"\n dec:$decBuffD imm:$immBuffD alu:$aluBuffD opc:$opcBuffD \n\n mem:$memBuffD memAlu:$memAluBuffD memOpc: \n\n wbmem:$wbMemBuffD wbalu:$wbAluBuffD wbopc:$wbOpcBuffD \n\n")
         println(f"hazard: $hazard")
         print(f"instruction: $ins%08x at $pc - jmpaddr: $pcJmpAddr and ctrlBranch =")
         println()
@@ -116,7 +181,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
           sb.append(f"$v%08x" + "\n")
   }
 
-  sb.toString should be (helperFunc.hexToString("./testData/task1/addlarge.res"))
+  sb.toString should be (helperFunc.hexToString("./testData/task2/branchcnt.res"))
   
 
     println(" ")
@@ -124,102 +189,26 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     }
   }
 }
-
-class R2Test extends FlatSpec with ChiselScalatestTester with Matchers {
-  "MAIN tester" should "pass" in {
-    test(new SingleCycleRiscV("./testData/instructions.hex.txt")) { m=>
-    
-      breakable { 
-        for (i <- 0 to 20) {
-          
-          var done = m.io.done.peek().litValue()
-          var pc = m.io.pcDebug.peek().litValue()
-          var ins =  m.io.instrDebug.peek().litValue()
-          var op = m.io.opcodeDebug.peek().litValue()
-          var rd = m.io.rdDebug.peek().litValue()
-          var funct3 = m.io.funct3Debug.peek().litValue()
-          var funct7 = m.io.funct7Debug.peek().litValue()
-          var rs1 = m.io.rs1Debug.peek().litValue()
-          var rs2 = m.io.rs2Debug.peek().litValue()
-          var imm = m.io.immDebug.peek().litValue()
-          var rd1 = m.io.rd1Debug.peek().litValue()
-          var rd2 = m.io.rd2Debug.peek().litValue()
-          //var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
-          var jmpAddr = m.io.pcJmpAddrDebug.peek().litValue()
-          var aluOut = m.io.aluOutDebug.peek().litValue()
-          var aluCmpOut = m.io.aluCmpOutDebug.peek().litValue()
-
-          
-          println()
-          print("\n-----------------------------------\n")
-          print(f"instruction: $ins%08x and PC = $pc & jmpAddr = $jmpAddr")
-          println()
-          print(f"aluOut = $aluOut | aluCmpOut = $aluCmpOut")
-          println()
-          print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2 = \n\n")
-          println()
-          /* print regs */
-          for(i <- 0 until 32){
-            if(i != 0 && i % 8 == 0) { print(f"\n") } 
-                
-            var v = m.io.regDebug(i).peek().litValue() // peek(dut.io.regDebug(i))
-            print(f"x$i%-2d ")
-            print(f"$v%08x ")
-          }
-
-          print("\n-----------------------------------\n")
-          println()
-          println()
-          println()
-        m.clock.step(1)
-        if (done == BigInt(1)) break
-        } 
-      }
-
-
-
-      
-    }
-  }
-
-}
-
 /*
+   0x00200093, // addi x1 x0 2
+    0x00300113, // addi x2 x0 3
+    0x002081b3) // add x3 x1 x2
+*/
+// class RiscVSpec extends FlatSpec with Matchers {
+//   "RiscV test" should "pass" in {
+//     test(new SingleCycleRiscV).withAnnotations(Seq(WriteVcdAnnotation)) { c=>
+//         c.io.fetch.poke(true.B)
+//         c.clock.step(20)
+//         c.io.instOut.expect(4369.U)
+//         c.io.fetch.poke(false.B)
+//         c.io.pcPlus.poke(true.B)
+//         c.clock.step(1)
+//         c.io.pcPlus.poke(false.B)
+//         c.io.fetch.poke(true.B)
+//         c.clock.step(5)
+//         c.io.fetch.poke(false.B)
+//         c.clock.step(5)
+//     }
+//   }
+// }
 
-    for(w <- 0 until 15){
-      
-      var pc = m.io.pcDebug.peek().litValue()
-      var ins =  m.io.instrDebug.peek().litValue()
-      var op = m.io.opcodeDebug.peek().litValue()
-      var rd = m.io.rdDebug.peek().litValue()
-      var funct3 = m.io.funct3Debug.peek().litValue()
-      var funct7 = m.io.funct7Debug.peek().litValue()
-      var rs1 = m.io.rs1Debug.peek().litValue()
-      var rs2 = m.io.rs2Debug.peek().litValue()
-      var imm = m.io.immDebug.peek().litValue()
-      var rd1 = m.io.rd1Debug.peek().litValue()
-      var rd2 = m.io.rd2Debug.peek().litValue()
-      var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
-     
-      var done = m.io.done.peek().litValue()
-      if(done == BigInt(1)){
-       print("DONEONEOND")
-        
-      } else {
-        m.clock.step(1)
-      }
-    print(f"instruction: $ins%08x and PC: $pc")
-        println()
-        print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = $aluCtrl\n\n")
-        println()
-        for(i <- 0 until 32){
-    if(i != 0 && i % 8 == 0) { print(f"\n") } 
-          var v = m.io.regDebug(i).peek().litValue() // peek(dut.io.regDebug(i))
-          print(f"x$i%-2d ")
-          print(f"$v%08x ")
-    }
-    println()
-        println()
-      
-      
-      */

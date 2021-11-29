@@ -10,7 +10,7 @@ class RegisterTest extends FlatSpec with ChiselScalatestTester with Matchers {
     
    for (w <- 0 to 1000) {
         val r = new scala.util.Random
-        val addr = r.nextInt(32)
+        val addr = 1 + r.nextInt(31)
         val data = r.nextInt(100000) 
         
         m.io.wrEnable.poke(true.B)

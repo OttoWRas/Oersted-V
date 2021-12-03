@@ -26,15 +26,24 @@ class Registers extends Module {
     io.rdData1 := WireDefault(0.U)
     io.rdData2 := WireDefault(0.U)
     io.rdData3 := WireDefault(0.U)
+    io.rdData1 := registerFile(io.rdAddr1)
+    io.rdData2 := registerFile(io.rdAddr2)
+    io.rdData3 := registerFile(io.rdAddr3)
 
     when (io.wrEnable && io.wrAddr =/= 0.U) {
+        when (io.wrAddr === io.rdAddr1) {
+            io.rdData1 := io.wrData
+        }
+        when (io.wrAddr === io.rdAddr2) {
+            io.rdData2 := io.wrData
+        }
+        when (io.wrAddr === io.rdAddr3) {
+            io.rdData3 := io.wrData
+        }
         registerFile(io.wrAddr) := io.wrData
     }
-    //when (!io.wrEnable) {
-        io.rdData1 := registerFile(io.rdAddr1)
-        io.rdData2 := registerFile(io.rdAddr2)
-        io.rdData3 := registerFile(io.rdAddr3)
-    //}
+
+    
     io.x17 := registerFile(17.U)
 
    io.regDebug := registerFile

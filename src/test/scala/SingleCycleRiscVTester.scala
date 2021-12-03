@@ -118,11 +118,11 @@ class RiscVSpecFull extends FlatSpec with ChiselScalatestTester with Matchers {
 
 class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
   "MAIN tester" should "pass" in {
-    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task2/branchmany.bin"))).withAnnotations(Seq(WriteVcdAnnotation)) { m=>
+    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task2/branchtrap.bin"))).withAnnotations(Seq(WriteVcdAnnotation)) { m=>
     val sb = new StringBuilder  
    
   breakable  {
-    for (w <- 0 to 32) {
+    for (w <- 0 to 64) {
       
     var pc = m.io.pcDebug.peek().litValue()
     var ins =  m.io.instrDebug.peek().litValue()
@@ -153,13 +153,13 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
    // var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
     var done = m.io.done.peek().litValue()
     
-    var pcJmpAddr = m.io.pcJmpAddrDebug.peek().litValue()
+    //var pcJmpAddr = m.io.pcJmpAddrDebug.peek().litValue()
     //var ctrlBranch = m.io.ctrlBranchDebug.peek().litValue()
 
      
         println(f"\n dec:$decBuffD imm:$immBuffD alu:$aluBuffD opc:$opcBuffD \n\n mem:$memBuffD memAlu:$memAluBuffD memOpc: \n\n wbmem:$wbMemBuffD wbalu:$wbAluBuffD wbopc:$wbOpcBuffD \n\n")
         println(f"hazard: $hazard")
-        print(f"instruction: $ins%08x at $pc - jmpaddr: $pcJmpAddr and ctrlBranch =")
+        print(f"instruction: $ins%08x at $pc - jmpaddr:  and ctrlBranch =")
         println()
         print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = \n\n")
       
@@ -181,7 +181,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
           sb.append(f"$v%08x" + "\n")
   }
 
-  sb.toString should be (helperFunc.hexToString("./testData/task2/branchmany.res"))
+  sb.toString should be (helperFunc.hexToString("./testData/task2/branchtrap.res"))
   
 
     println(" ")

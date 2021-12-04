@@ -97,12 +97,20 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
     val hBuff    = Reg(UInt(32.W))
     val hFlag  = Reg(Bool())
+    val sFlag  = Reg(Bool())
+
     hFlag := false.B
     when (hazard) {
       hFlag := true.B
       when(~hFlag) {
         hBuff := mem.io.rdData
       }
+    }
+
+    sFlag := false.B
+    when (stop) {
+      sFlag := true.B
+      hBuff := mem.io.rdData
     }
     
     val pc  = Reg(UInt(32.W))
@@ -121,7 +129,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     val pcpBuff  = Reg(UInt(32.W))
 
     when (~stop && ~hazard) {
-      when(hFlag) {
+      when(hFlag || sFlag) {
         instBuff := hBuff
       }.otherwise{
         instBuff := mem.io.rdData
@@ -129,7 +137,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
       pcpBuff  := pcL
       
-      when(~branch) {
+      when(~branch && ~stop) {
         pc := pc + 4.U
       }
     }
@@ -203,14 +211,20 @@ class SingleCycleRiscV(program: String = "") extends Module {
       decBuffAlu := 0.U.asTypeOf(new DecodeOut)
     }
 
-    when(decBuffAlu.opcode === OP_B && cmpBuff) {
+    when(((decBuffAlu.opcode === OP_B && cmpBuff) || decBuffAlu.opcode === OP_JAL || decBuffAlu.opcode === OP_JALR)) {
       branch        := true.B
       pc            := pcpBuffAlu + immBuffAlu + 4.U
       pcL           := pcpBuffAlu + immBuffAlu
-      mem.io.rdAddr := (pcpBuffAlu + immBuffAlu)/4.U
+
+      when(decBuffAlu.opcode =/= OP_JALR) {
+        mem.io.rdAddr := (pcpBuffAlu + immBuffAlu)/4.U
+      }.otherwise {
+        reg.io.rdAddr3 := decBuffAlu.rs1 
+        mem.io.rdAddr  := (pcpBuffAlu + immBuffAlu + reg.io.rdData3)/4.U
+      }
     }
 
-    when(decBuffAlu.opcode === OP_IL || decBuffAlu.opcode === OP_S) { // "b0000011".U - "b0100011".U
+    when((decBuffAlu.opcode === OP_IL || decBuffAlu.opcode === OP_S) && ~sFlag) { // "b0000011".U - "b0100011".U
       stop := true.B
       when(decBuffAlu.opcode === OP_IL) {
         mem.io.rdAddr := aluBuff
@@ -237,26 +251,30 @@ class SingleCycleRiscV(program: String = "") extends Module {
     // WB STAGE
     reg.io.wrAddr := 0.U
     reg.io.wrData := 0.U
-
     
     val aluBuffMem = Reg(UInt(32.W))
+    val pcpBuffMem = Reg(UInt(32.W))
     val decBuffMem = Reg(Output(new DecodeOut))
     val memBuff    = Reg(UInt(32.W))
 
     when(~stop) {
       aluBuffMem := aluBuff
+      pcpBuffMem := pcpBuffAlu
       decBuffMem := decBuffAlu
-      memBuff    := 42.U
+      memBuff    := mem.io.rdData 
     }
 
     when (~stop) {
       when(decBuffMem.opcode === OP_IL) {
         reg.io.wrEnable := true.B
         reg.io.wrAddr   := decBuffMem.rd
-        reg.io.wrData   := 42.U//memBuff
+        reg.io.wrData   := memBuff
       }.elsewhen(decBuffMem.opcode === OP_S) {
         reg.io.wrEnable := false.B
-  
+      }.elsewhen(decBuffMem.opcode === OP_JAL || decBuffMem.opcode === OP_JALR) {
+        reg.io.wrEnable := true.B
+        reg.io.wrAddr   := decBuffMem.rd
+        reg.io.wrData   := pcpBuffMem + 4.U
       }.elsewhen(decBuffMem.opcode =/= OP_B) {
         reg.io.wrEnable := true.B
         reg.io.wrAddr   := decBuffMem.rd

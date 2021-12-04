@@ -8,7 +8,7 @@ object OP {
     val OP_I:     UInt = 19.U(7.W) // 'regular' I instructions
     val OP_IL:    UInt = 3.U(7.W) // type I load instructions
     val OP_IE:    UInt = 115.U(7.W) // type I environment call instructions 
-    val OP_S:     UInt = 32.U(7.W)
+    val OP_S:     UInt = 35.U(7.W)
     val OP_B:     UInt = 99.U(7.W) 
     val OP_JAL:   UInt = 111.U(7.W) // J type
     val OP_JALR:  UInt = 103.U(7.W) // I type

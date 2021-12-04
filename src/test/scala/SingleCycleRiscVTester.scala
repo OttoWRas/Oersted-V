@@ -54,7 +54,7 @@ object helperFunc {
 
 class RiscVSpecFull extends FlatSpec with ChiselScalatestTester with Matchers {
   
-    val listOfFiles = new java.io.File("./testData/task2/").listFiles
+    val listOfFiles = new java.io.File("./testData/task4/").listFiles
       .map(_.getPath())
 
     val listOfBin: Array[String] = listOfFiles
@@ -118,11 +118,11 @@ class RiscVSpecFull extends FlatSpec with ChiselScalatestTester with Matchers {
 
 class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
   "MAIN tester" should "pass" in {
-    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task2/branchtrap.bin"))).withAnnotations(Seq(WriteVcdAnnotation)) { m=>
+    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task3/loop.bin"))).withAnnotations(Seq(WriteVcdAnnotation)) { m=>
     val sb = new StringBuilder  
    
   breakable  {
-    for (w <- 0 to 64) {
+    for (w <- 0 to 512) {
       
     var pc = m.io.pcDebug.peek().litValue()
     var ins =  m.io.instrDebug.peek().litValue()
@@ -181,7 +181,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
           sb.append(f"$v%08x" + "\n")
   }
 
-  sb.toString should be (helperFunc.hexToString("./testData/task2/branchtrap.res"))
+  sb.toString should be (helperFunc.hexToString("./testData/task3/loop.res"))
   
 
     println(" ")

@@ -9,7 +9,7 @@ class Memory(fileToLoad: String = "") extends Module {
             val rdAddr   = Input(UInt(32.W))
             val wrEnable = Input(Bool())
             val wrData   = Input(UInt(32.W))
-            val wrAddr   = Input(UInt(16.W))
+            val wrAddr   = Input(UInt(32.W))
 
             val rdData   = Output(UInt(32.W))
     })

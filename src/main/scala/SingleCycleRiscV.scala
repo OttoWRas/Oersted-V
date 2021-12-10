@@ -82,7 +82,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     }
     
     mem.io.rdAddr   := 0.U
-    mem.io.wrAddr   := 2.U
+    mem.io.wrAddr   := 0.U
     mem.io.wrData   := 0.U
     mem.io.wrEnable := 0.U
     
@@ -121,26 +121,12 @@ class SingleCycleRiscV(program: String = "") extends Module {
     }
 
     when (~stop && ~branch) {
-      mem.io.rdAddr := pc/4.U
+      mem.io.rdAddr := pc
     }
     
     // MEM -> INSTBUFF STAGE
-    val instBuff = Reg(UInt(32.W))
+    val instBuff = RegInit(0.U(32.W))
     val pcpBuff  = Reg(UInt(32.W))
-
-    when (~stop && ~hazard) {
-      when(hFlag || sFlag) {
-        instBuff := hBuff
-      }.otherwise{
-        instBuff := mem.io.rdData
-      }
-
-      pcpBuff  := pcL
-      
-      when(~branch && ~stop) {
-        pc := pc + 4.U
-      }
-    }
 
     when (branch) {
       instBuff := 0.U
@@ -181,8 +167,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
     reg.io.rdAddr2 := decBuff.rs2
     alu.io.data1   := reg.io.rdData1
     alu.io.opcode  := iopBuff
-
-    when(immBuff =/= 0.U && decBuff.opcode =/= OP_B) { // this should be ctrl.io.ALUSrc.. seems dangerous to rely on this i think.. it is let me fix later
+    when((immBuff =/= 0.U && decBuff.opcode =/= OP_B) || decBuff.opcode === OP_S) { // this should be ctrl.io.ALUSrc.. seems dangerous to rely on this i think.. it is let me fix later
       alu.io.data2 := immBuff
     }.otherwise {
       alu.io.data2 := reg.io.rdData2 
@@ -217,10 +202,10 @@ class SingleCycleRiscV(program: String = "") extends Module {
       pcL           := pcpBuffAlu + immBuffAlu
 
       when(decBuffAlu.opcode =/= OP_JALR) {
-        mem.io.rdAddr := (pcpBuffAlu + immBuffAlu)/4.U
+        mem.io.rdAddr := (pcpBuffAlu + immBuffAlu)
       }.otherwise {
         reg.io.rdAddr3 := decBuffAlu.rs1 
-        mem.io.rdAddr  := (pcpBuffAlu + immBuffAlu + reg.io.rdData3)/4.U
+        mem.io.rdAddr  := (pcpBuffAlu + immBuffAlu + reg.io.rdData3)
       }
     }
 
@@ -228,22 +213,17 @@ class SingleCycleRiscV(program: String = "") extends Module {
       stop := true.B
       when(decBuffAlu.opcode === OP_IL) {
         mem.io.rdAddr := aluBuff
-
-        switch(decBuffAlu.funct3) {
-          is(0.U) {mem.io.wrData   := reg.io.rdData3(7, 0)}
-          is(2.U) {mem.io.wrData   := reg.io.rdData3}
-        }
       }
 
       when(decBuffAlu.opcode === OP_S) { //"b0100011".U
         mem.io.wrEnable := true.B
         mem.io.wrAddr   := aluBuff
-        reg.io.rdAddr3  := decBuffAlu.rd
+        reg.io.rdAddr3  := decBuffAlu.rs2
         
         switch(decBuffAlu.funct3) {
           is(0.U) {mem.io.wrData   := reg.io.rdData3(7,0)}
-          is(2.U) {mem.io.wrData   := reg.io.rdData3}
-          is(4.U) {mem.io.wrData   := reg.io.rdData3(7,0)} //needs sign extend
+          is(1.U) {mem.io.wrData   := reg.io.rdData3(15,0)}
+          is(2.U) {mem.io.wrData   := reg.io.rdData3} //needs sign extend
         }
       }
     }
@@ -268,7 +248,15 @@ class SingleCycleRiscV(program: String = "") extends Module {
       when(decBuffMem.opcode === OP_IL) {
         reg.io.wrEnable := true.B
         reg.io.wrAddr   := decBuffMem.rd
-        reg.io.wrData   := memBuff
+
+        switch(decBuffMem.funct3) {
+          is(0.U) {reg.io.wrData   := Cat("hffffff".U,memBuff(7,0))}
+          is(1.U) {reg.io.wrData   := Cat("hffff".U, memBuff(15,0))}
+          is(2.U) {reg.io.wrData   := memBuff}
+          is(4.U) {reg.io.wrData   := memBuff(7,0)}
+          is(5.U) {reg.io.wrData   := memBuff(15,0)}
+        }
+
       }.elsewhen(decBuffMem.opcode === OP_S) {
         reg.io.wrEnable := false.B
       }.elsewhen(decBuffMem.opcode === OP_JAL || decBuffMem.opcode === OP_JALR) {
@@ -287,12 +275,30 @@ class SingleCycleRiscV(program: String = "") extends Module {
         hazard := true.B
     }
 
+    when (~stop && ~hazard) {
+      when(hFlag) {
+        instBuff := hBuff
+      }.elsewhen(~(sFlag && decBuffMem.opcode === OP_I) && ~branch){
+        instBuff := mem.io.rdData
+      }
+
+      pcpBuff  := pcL
+      
+      when(~branch && ~stop) {
+        pc := pc + 4.U
+      }
+    }
+    when(sFlag && decBuffAlu.opcode === OP_IL) {
+      instBuff := hBuff
+      io.opcBuffD := true.B
+    }
+
       /* intermidiate debug*/
     io.decBuffD := decBuff.rd
     io.immBuffD := immBuff
     io.aluBuffD := aluBuff
     
-    io.opcBuffD := decBuff.opcode
+    io.opcBuffD := false.B
     io.rs1Debug := dec.out.rs1
     io.rs2Debug := dec.out.rs2
 
@@ -304,7 +310,11 @@ class SingleCycleRiscV(program: String = "") extends Module {
     io.wbOpcBuffD  := 0.U
     io.hazardD     := branch 
     io.pcDebug     := 0.U
-    io.instrDebug := 0.U // mem.io.rdData //instr.io.instOut
+    io.instrDebug  := 0.U // mem.io.rdData //instr.io.instOut
+
+    when(reg.io.x17 === 10.U && decBuffMem.opcode === OP_ECALL) {
+      stop := true.B
+    }
 }
 
 object CPU extends App {

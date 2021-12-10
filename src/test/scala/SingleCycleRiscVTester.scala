@@ -23,11 +23,9 @@ object helperFunc {
         var i = 1
         var n = 0
         for (b <- byteArray) {
-            sb.insert(0 + n*9, String.format("%02x", Byte.box(b)))
-            if (i % 4 == 0) {
-                sb.append("\n")
-                n += 1
-            }
+            sb.insert(0 + n*3, String.format("%02x", Byte.box(b)))
+            sb.append("\n")
+            n += 1
             i += 1
         }
         printWriter.write(sb.toString)
@@ -122,7 +120,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     val sb = new StringBuilder  
    
   breakable  {
-    for (w <- 0 to 512) {
+    for (w <- 0 to 256) {
       
     var pc = m.io.pcDebug.peek().litValue()
     var ins =  m.io.instrDebug.peek().litValue()

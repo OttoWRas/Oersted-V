@@ -14,6 +14,7 @@ object OP {
     val OP_JALR:  UInt = 103.U(7.W) // I type
     val OP_LUI:   UInt = 55.U(7.W) // U type
     val OP_AUIPC: UInt = "b0010111".U(7.W) // U type 
+    val OP_ECALL: UInt = "b1110011".U(7.W)
 }
 
 class DecodeOut extends Bundle {
@@ -153,7 +154,7 @@ class Decoder extends MultiIOModule {
             }
 
         }
-        is (OP.OP_I, OP_IL, OP_IE, OP_JALR){
+        is (OP.OP_I, OP_IE, OP_JALR, OP_ECALL){
             val I = io.in.asTypeOf(new IType)
 
             out.rd      := I.rd
@@ -185,7 +186,23 @@ class Decoder extends MultiIOModule {
                 is(3.U){ io.aluOp := ALU_SLTU }
             }
         }
-       
+        is (OP_IL){
+            val I = io.in.asTypeOf(new IType)
+
+            out.rd      := I.rd
+            out.funct3  := I.funct3
+            out.rs1     := I.rs1
+            io.aluOp := 0.U
+            val immTemp = Wire(UInt(32.W))
+            immTemp     := I.imm11to0
+        
+            /* sign extension of immediate */
+            when(I.imm11to0(11) & true.B) { //check if sign bit is 1
+                immTemp := I.imm11to0 | "hFFFFF000".U // extend with 1's
+            }
+            out.imm := immTemp.asSInt
+
+        }
         // U type
         is(OP_LUI, OP_AUIPC){
             val U = io.in.asTypeOf(new UType)

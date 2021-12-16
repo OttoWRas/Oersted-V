@@ -156,7 +156,7 @@ class SingleCycleRiscV(program: String = "") extends Module {
       immBuff    := 0.U
     }
     
-    when(hazard) {
+    when(hazard && ~stop) {
       decBuff    := 0.U.asTypeOf(new DecodeOut)
       pcpBuffDec := 0.U
       iopBuff    := 0.U
@@ -198,14 +198,17 @@ class SingleCycleRiscV(program: String = "") extends Module {
 
     when(((decBuffAlu.opcode === OP_B && cmpBuff) || decBuffAlu.opcode === OP_JAL || decBuffAlu.opcode === OP_JALR)) {
       branch        := true.B
-      pc            := pcpBuffAlu + immBuffAlu + 4.U
-      pcL           := pcpBuffAlu + immBuffAlu
+
 
       when(decBuffAlu.opcode =/= OP_JALR) {
         mem.io.rdAddr := (pcpBuffAlu + immBuffAlu)
+        pc            := pcpBuffAlu + immBuffAlu + 4.U
+        pcL           := pcpBuffAlu + immBuffAlu
       }.otherwise {
         reg.io.rdAddr3 := decBuffAlu.rs1 
-        mem.io.rdAddr  := (pcpBuffAlu + immBuffAlu + reg.io.rdData3)
+        mem.io.rdAddr  := pcpBuffAlu + immBuffAlu + reg.io.rdData3
+        pc             := pcpBuffAlu + immBuffAlu + reg.io.rdData3 + 4.U
+        pcL            := pcpBuffAlu + immBuffAlu + reg.io.rdData3
       }
     }
 

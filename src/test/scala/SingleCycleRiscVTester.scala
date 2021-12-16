@@ -52,7 +52,7 @@ object helperFunc {
 
 class RiscVSpecFull extends FlatSpec with ChiselScalatestTester with Matchers {
   
-    val listOfFiles = new java.io.File("./testData/task4/").listFiles
+    val listOfFiles = new java.io.File("./testData/task3/").listFiles
       .map(_.getPath())
 
     val listOfBin: Array[String] = listOfFiles
@@ -69,8 +69,9 @@ class RiscVSpecFull extends FlatSpec with ChiselScalatestTester with Matchers {
       test(new SingleCycleRiscV(helperFunc.hexToFile(listOfBin(n)))).withAnnotations(Seq(WriteVcdAnnotation)) { m=>
       
       val sb = new StringBuilder 
+      m.clock.setTimeout(0)
 
-      for (w <- 0 to 512) {
+      for (w <- 0 to 756) {
         var pc = m.io.pcDebug.peek().litValue()
         var ins =  m.io.instrDebug.peek().litValue()
         var op = m.io.opcodeDebug.peek().litValue()
@@ -83,7 +84,7 @@ class RiscVSpecFull extends FlatSpec with ChiselScalatestTester with Matchers {
         var rd1 = m.io.rd1Debug.peek().litValue()
         var rd2 = m.io.rd2Debug.peek().litValue()
         //var aluCtrl = m.io.aLUSrcDebug.peek().litValue()
-        m.clock.step(1)
+        m.clock.step(20)
          // print(f"rdAddr: $pc%x => ")
          // print(f"rdData: $ins%8x\n \n\n")
       //println()
@@ -116,9 +117,9 @@ class RiscVSpecFull extends FlatSpec with ChiselScalatestTester with Matchers {
 
 class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
   "MAIN tester" should "pass" in {
-    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task3/loop.bin"))).withAnnotations(Seq(WriteVcdAnnotation)) { m=>
+    test(new SingleCycleRiscV(helperFunc.hexToFile("./testData/task3/recursive.bin"))).withAnnotations(Seq(WriteVcdAnnotation)) { m=>
     val sb = new StringBuilder  
-   
+    m.clock.setTimeout(0)
   breakable  {
     for (w <- 0 to 256) {
       
@@ -154,22 +155,22 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
     //var pcJmpAddr = m.io.pcJmpAddrDebug.peek().litValue()
     //var ctrlBranch = m.io.ctrlBranchDebug.peek().litValue()
 
-     
+     /*
         println(f"\n dec:$decBuffD imm:$immBuffD alu:$aluBuffD opc:$opcBuffD \n\n mem:$memBuffD memAlu:$memAluBuffD memOpc: \n\n wbmem:$wbMemBuffD wbalu:$wbAluBuffD wbopc:$wbOpcBuffD \n\n")
         println(f"hazard: $hazard")
         print(f"instruction: $ins%08x at $pc - jmpaddr:  and ctrlBranch =")
         println()
         print(f"opcode = $op\nrd = $rd\nfunct3 = $funct3\nrs1 = $rs1\nrs2 = $rs2\nfunct7 = $funct7\nimm = $imm\nrd1 = $rd1\nrd2 = $rd2\naluCtrl = \n\n")
-      
+      */
   
-  for(i <- 0 until 32){
+  /*for(i <- 0 until 32){
     if(i != 0 && i % 8 == 0) { print(f"\n") } 
           var v = m.io.regDebug(i).peek().litValue() // peek(dut.io.regDebug(i))
           print(f"x$i%-2d ")
           print(f"$v%08x ")
-    }
-      m.clock.step(1)
-        if (done == BigInt(1)) break
+    }*/
+  if (done == BigInt(1)) break
+      m.clock.step(10)
         } 
   }
 
@@ -179,7 +180,7 @@ class RiscVSpec extends FlatSpec with ChiselScalatestTester with Matchers {
           sb.append(f"$v%08x" + "\n")
   }
 
-  sb.toString should be (helperFunc.hexToString("./testData/task3/loop.res"))
+  sb.toString should be (helperFunc.hexToString("./testData/task3/recursive.res"))
   
 
     println(" ")
